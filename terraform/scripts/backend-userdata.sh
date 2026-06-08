@@ -19,6 +19,7 @@ DYNAMODB_ORDERS_TABLE="${dynamodb_orders_table}"
 SQS_ORDER_QUEUE_URL="${sqs_order_queue_url}"
 SNS_ORDERS_TOPIC_ARN="${sns_orders_topic_arn}"
 SNS_ALERTS_TOPIC_ARN="${sns_alerts_topic_arn}"
+S3_PRODUCT_IMAGES_BUCKET="${s3_product_images_bucket}"
 
 LOG_FILE="/var/log/shopmesh-backend-userdata.log"
 exec > >(tee -a "$LOG_FILE") 2>&1
@@ -131,7 +132,7 @@ services:
       - DYNAMODB_PRODUCTS_TABLE=$DYNAMODB_PRODUCTS_TABLE
       - SNS_ORDERS_TOPIC_ARN=$SNS_ORDERS_TOPIC_ARN
       - SNS_ALERTS_TOPIC_ARN=$SNS_ALERTS_TOPIC_ARN
-      - S3_PRODUCT_IMAGES_BUCKET=$PROJECT_NAME-product-images
+      - S3_PRODUCT_IMAGES_BUCKET=$S3_PRODUCT_IMAGES_BUCKET
       - AUTH_SERVICE_URL=http://auth-service:3001
     depends_on:
       auth-service:

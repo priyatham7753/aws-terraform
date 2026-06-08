@@ -142,6 +142,28 @@ resource "aws_iam_role_policy" "backend_ecr" {
   })
 }
 
+resource "aws_iam_role_policy" "backend_s3_product_images" {
+  name = "${var.project_name}-backend-s3-product-images"
+  role = aws_iam_role.backend_ec2.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect = "Allow"
+      Action = [
+        "s3:GetObject",
+        "s3:PutObject",
+        "s3:DeleteObject",
+        "s3:ListBucket"
+      ]
+      Resource = [
+        "arn:aws:s3:::${var.project_name}-product-images-*",
+        "arn:aws:s3:::${var.project_name}-product-images-*/*"
+      ]
+    }]
+  })
+}
+
 resource "aws_iam_instance_profile" "backend_ec2" {
   name = "${var.project_name}-backend-ec2-profile"
   role = aws_iam_role.backend_ec2.name
