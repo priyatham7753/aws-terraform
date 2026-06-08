@@ -29,3 +29,40 @@ Thumbs.db
 .vscode/
 .idea/
 *.swp
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+crash.log
+
+# Terraform lock (optional to keep)
+.terraform.lock.hcl
+
+# OS / misc
+.DS_Store
+Thumbs.db
+
+# Terraform
+**/.terraform/*
+*.tfstate
+*.tfstate.*
+crash.log
+
+# Terraform lock file (optional)
+# .terraform.lock.hcl
+
+# Windows
+Thumbs.db
+Desktop.ini
+
+# VS Code
+.vscode/
+
+# Node
+node_modules/
+
+# Logs
+*.log
+
+##
