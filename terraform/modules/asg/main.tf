@@ -1,12 +1,12 @@
 # ─── Frontend Auto Scaling Group ──────────────────────────────────────────
 resource "aws_autoscaling_group" "frontend" {
-  name                = "${var.project_name}-frontend-asg"
-  min_size            = var.frontend_min_size
-  max_size            = var.frontend_max_size
-  desired_capacity    = var.frontend_desired_capacity
-  vpc_zone_identifier = var.public_subnet_ids
-  target_group_arns   = [var.frontend_target_group_arn]
-  health_check_type   = "ELB"
+  name                      = "${var.project_name}-frontend-asg"
+  min_size                  = var.frontend_min_size
+  max_size                  = var.frontend_max_size
+  desired_capacity          = var.frontend_desired_capacity
+  vpc_zone_identifier       = var.public_subnet_ids
+  target_group_arns         = [var.frontend_target_group_arn]
+  health_check_type         = "ELB"
   health_check_grace_period = 120
 
   launch_template {
@@ -48,9 +48,8 @@ resource "aws_autoscaling_policy" "frontend_cpu" {
     predefined_metric_specification {
       predefined_metric_type = "ASGAverageCPUUtilization"
     }
-    target_value       = 60.0
-    scale_in_cooldown  = 300
-    scale_out_cooldown = 60
+    target_value     = 60.0
+    disable_scale_in = false
   }
 }
 
@@ -108,9 +107,8 @@ resource "aws_autoscaling_policy" "backend_cpu" {
     predefined_metric_specification {
       predefined_metric_type = "ASGAverageCPUUtilization"
     }
-    target_value       = 60.0
-    scale_in_cooldown  = 300
-    scale_out_cooldown = 60
+    target_value     = 60.0
+    disable_scale_in = false
   }
 }
 
@@ -125,8 +123,7 @@ resource "aws_autoscaling_policy" "backend_requests" {
       predefined_metric_type = "ALBRequestCountPerTarget"
       resource_label         = "${var.internal_alb_arn_suffix}/${var.auth_tg_arn_suffix}"
     }
-    target_value       = 1000.0
-    scale_in_cooldown  = 300
-    scale_out_cooldown = 60
+    target_value     = 1000.0
+    disable_scale_in = false
   }
 }

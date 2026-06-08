@@ -60,17 +60,6 @@ variable "ec2_key_pair_name" {
   default     = ""
 }
 
-variable "frontend_ami_id" {
-  description = "AMI ID for frontend instances (Amazon Linux 2023)"
-  type        = string
-  default     = "ami-0c02fb55956c7d316" # Amazon Linux 2023 us-east-1
-}
-
-variable "backend_ami_id" {
-  description = "AMI ID for backend instances"
-  type        = string
-  default     = "ami-0c02fb55956c7d316"
-}
 
 # ─── ASG ──────────────────────────────────────────────────────────────────
 variable "frontend_asg_min" {
@@ -115,12 +104,6 @@ variable "docker_image_tag" {
   description = "Docker image tag to deploy"
   type        = string
   default     = "latest"
-}
-
-variable "ecr_registry" {
-  description = "ECR registry URI (account.dkr.ecr.region.amazonaws.com)"
-  type        = string
-  default     = ""
 }
 
 variable "alert_email" {

@@ -94,8 +94,8 @@ resource "aws_iam_role_policy" "backend_sns" {
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [{
-      Effect   = "Allow"
-      Action   = ["sns:Publish"]
+      Effect = "Allow"
+      Action = ["sns:Publish"]
       Resource = [
         "arn:aws:sns:${var.aws_region}:${data.aws_caller_identity.current.account_id}:${var.project_name}-*"
       ]
@@ -225,8 +225,8 @@ resource "aws_iam_role_policy" "eventbridge_sns" {
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [{
-      Effect   = "Allow"
-      Action   = ["sns:Publish"]
+      Effect = "Allow"
+      Action = ["sns:Publish"]
       Resource = [
         "arn:aws:sns:${var.aws_region}:${data.aws_caller_identity.current.account_id}:${var.project_name}-*"
       ]

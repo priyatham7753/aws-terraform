@@ -10,9 +10,9 @@ resource "aws_sqs_queue" "order_processing_dlq" {
 # ─── Main Order Processing Queue ──────────────────────────────────────────
 resource "aws_sqs_queue" "order_processing" {
   name                       = "${var.project_name}-order-processing"
-  message_retention_seconds  = 86400   # 1 day
+  message_retention_seconds  = 86400 # 1 day
   visibility_timeout_seconds = 30
-  receive_wait_time_seconds  = 20      # Long polling
+  receive_wait_time_seconds  = 20 # Long polling
 
   redrive_policy = jsonencode({
     deadLetterTargetArn = aws_sqs_queue.order_processing_dlq.arn

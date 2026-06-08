@@ -14,8 +14,8 @@ resource "aws_cloudwatch_event_target" "daily_order_summary_sns" {
   role_arn  = var.eventbridge_role_arn
 
   input = jsonencode({
-    event_type = "daily_order_summary"
-    scheduled  = true
+    event_type  = "daily_order_summary"
+    scheduled   = true
     description = "Trigger daily order summary report"
   })
 }

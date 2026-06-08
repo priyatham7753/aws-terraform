@@ -6,38 +6,58 @@ resource "aws_cloudwatch_dashboard" "main" {
     widgets = [
       {
         type   = "metric"
-        x      = 0; y = 0; width = 12; height = 6
+        x      = 0
+        y      = 0
+        width  = 12
+        height = 6
         properties = {
-          title  = "Frontend ASG CPU"
+          title   = "Frontend ASG CPU"
           metrics = [["AWS/EC2", "CPUUtilization", "AutoScalingGroupName", "${var.frontend_asg_name}"]]
-          period = 300; stat = "Average"; view = "timeSeries"
+          period  = 300
+          stat    = "Average"
+          view    = "timeSeries"
         }
       },
       {
         type   = "metric"
-        x      = 12; y = 0; width = 12; height = 6
+        x      = 12
+        y      = 0
+        width  = 12
+        height = 6
         properties = {
-          title  = "Backend ASG CPU"
+          title   = "Backend ASG CPU"
           metrics = [["AWS/EC2", "CPUUtilization", "AutoScalingGroupName", "${var.backend_asg_name}"]]
-          period = 300; stat = "Average"; view = "timeSeries"
+          period  = 300
+          stat    = "Average"
+          view    = "timeSeries"
         }
       },
       {
         type   = "metric"
-        x      = 0; y = 6; width = 12; height = 6
+        x      = 0
+        y      = 6
+        width  = 12
+        height = 6
         properties = {
-          title  = "External ALB 5XX Errors"
+          title   = "External ALB 5XX Errors"
           metrics = [["AWS/ApplicationELB", "HTTPCode_ELB_5XX_Count", "LoadBalancer", "${var.external_alb_arn_suffix}"]]
-          period = 300; stat = "Sum"; view = "timeSeries"
+          period  = 300
+          stat    = "Sum"
+          view    = "timeSeries"
         }
       },
       {
         type   = "metric"
-        x      = 12; y = 6; width = 12; height = 6
+        x      = 12
+        y      = 6
+        width  = 12
+        height = 6
         properties = {
-          title  = "SQS Order Queue Depth"
+          title   = "SQS Order Queue Depth"
           metrics = [["AWS/SQS", "ApproximateNumberOfMessagesVisible", "QueueName", "${var.sqs_queue_name}"]]
-          period = 60; stat = "Maximum"; view = "timeSeries"
+          period  = 60
+          stat    = "Maximum"
+          view    = "timeSeries"
         }
       }
     ]

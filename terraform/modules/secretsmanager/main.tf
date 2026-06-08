@@ -33,10 +33,10 @@ resource "aws_secretsmanager_secret_version" "app_config" {
   secret_id = aws_secretsmanager_secret.app_config.id
 
   secret_string = jsonencode({
-    jwt_expires_in            = "24h"
-    dynamodb_users_table      = "${var.project_name}-users"
-    dynamodb_products_table   = "${var.project_name}-products"
-    dynamodb_orders_table     = "${var.project_name}-orders"
-    aws_region                = var.aws_region
+    jwt_expires_in          = "24h"
+    dynamodb_users_table    = "${var.project_name}-users"
+    dynamodb_products_table = "${var.project_name}-products"
+    dynamodb_orders_table   = "${var.project_name}-orders"
+    aws_region              = var.aws_region
   })
 }

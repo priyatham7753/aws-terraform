@@ -120,11 +120,11 @@ resource "aws_security_group" "backend" {
   }
 
   ingress {
-    description     = "Inter-service communication"
-    from_port       = 3001
-    to_port         = 3003
-    protocol        = "tcp"
-    self            = true
+    description = "Inter-service communication"
+    from_port   = 3001
+    to_port     = 3003
+    protocol    = "tcp"
+    self        = true
   }
 
   ingress {

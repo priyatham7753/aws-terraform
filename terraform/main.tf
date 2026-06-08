@@ -62,25 +62,30 @@ module "sqs" {
   backend_role_arn = module.iam.backend_ec2_role_arn
 }
 
+# ─── ECR ──────────────────────────────────────────────────────────────────
+module "ecr" {
+  source       = "./modules/ecr"
+  project_name = local.project_name
+}
+
 # ─── ALB ──────────────────────────────────────────────────────────────────
 module "alb" {
-  source              = "./modules/alb"
-  project_name        = local.project_name
-  vpc_id              = module.vpc.vpc_id
-  public_subnet_ids   = module.vpc.public_subnet_ids
-  private_subnet_ids  = module.vpc.private_subnet_ids
-  external_alb_sg_id  = module.security_groups.external_alb_sg_id
-  internal_alb_sg_id  = module.security_groups.internal_alb_sg_id
-  alb_logs_bucket     = module.s3.alb_logs_bucket_name
+  source             = "./modules/alb"
+  project_name       = local.project_name
+  vpc_id             = module.vpc.vpc_id
+  public_subnet_ids  = module.vpc.public_subnet_ids
+  private_subnet_ids = module.vpc.private_subnet_ids
+  external_alb_sg_id = module.security_groups.external_alb_sg_id
+  internal_alb_sg_id = module.security_groups.internal_alb_sg_id
+  alb_logs_bucket    = module.s3.alb_logs_bucket_name
 }
 
 # ─── Launch Templates ─────────────────────────────────────────────────────
+# templatefile() is called here (root module) so that the scripts/ path is
+# reachable without escaping the module directory boundary.
 module "launch_template" {
   source                         = "./modules/launch-template"
   project_name                   = local.project_name
-  aws_region                     = local.aws_region
-  frontend_ami_id                = var.frontend_ami_id
-  backend_ami_id                 = var.backend_ami_id
   frontend_instance_type         = var.frontend_instance_type
   backend_instance_type          = var.backend_instance_type
   frontend_sg_id                 = module.security_groups.frontend_sg_id
@@ -88,14 +93,31 @@ module "launch_template" {
   frontend_instance_profile_name = module.iam.frontend_ec2_instance_profile_name
   backend_instance_profile_name  = module.iam.backend_ec2_instance_profile_name
   key_pair_name                  = var.ec2_key_pair_name
-  internal_alb_dns_name          = module.alb.internal_alb_dns_name
-  ecr_registry                   = var.ecr_registry
-  docker_image_tag               = var.docker_image_tag
-  sqs_order_queue_url            = module.sqs.order_queue_url
-  sns_orders_topic_arn           = module.sns.orders_topic_arn
-  sns_alerts_topic_arn           = module.sns.alerts_topic_arn
 
-  depends_on = [module.alb, module.sqs, module.sns]
+  frontend_userdata = templatefile("${path.module}/scripts/frontend-userdata.sh", {
+    project_name     = local.project_name
+    internal_alb_dns = module.alb.internal_alb_dns_name
+    aws_region       = local.aws_region
+    frontend_ecr_url = module.ecr.frontend_repository_url
+    docker_image_tag = var.docker_image_tag
+  })
+
+  backend_userdata = templatefile("${path.module}/scripts/backend-userdata.sh", {
+    project_name            = local.project_name
+    aws_region              = local.aws_region
+    auth_ecr_url            = module.ecr.auth_repository_url
+    product_ecr_url         = module.ecr.product_repository_url
+    order_ecr_url           = module.ecr.order_repository_url
+    docker_image_tag        = var.docker_image_tag
+    dynamodb_users_table    = "${local.project_name}-users"
+    dynamodb_products_table = "${local.project_name}-products"
+    dynamodb_orders_table   = "${local.project_name}-orders"
+    sqs_order_queue_url     = module.sqs.order_queue_url
+    sns_orders_topic_arn    = module.sns.orders_topic_arn
+    sns_alerts_topic_arn    = module.sns.alerts_topic_arn
+  })
+
+  depends_on = [module.alb, module.sqs, module.sns, module.ecr]
 }
 
 # ─── Auto Scaling Groups ──────────────────────────────────────────────────
