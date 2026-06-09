@@ -22,13 +22,26 @@ def _get_table():
 
 
 def _serialize_decimals(obj):
-    """Convert Decimal types from DynamoDB back to float."""
+    """Convert Decimal types from DynamoDB back to float for API responses."""
     if isinstance(obj, list):
         return [_serialize_decimals(i) for i in obj]
     if isinstance(obj, dict):
         return {k: _serialize_decimals(v) for k, v in obj.items()}
     if isinstance(obj, Decimal):
         return float(obj)
+    return obj
+
+
+def _floats_to_decimals(obj):
+    """Convert float types to Decimal before writing to DynamoDB.
+    DynamoDB's boto3 resource client does not accept Python floats.
+    """
+    if isinstance(obj, list):
+        return [_floats_to_decimals(i) for i in obj]
+    if isinstance(obj, dict):
+        return {k: _floats_to_decimals(v) for k, v in obj.items()}
+    if isinstance(obj, float):
+        return Decimal(str(obj))
     return obj
 
 
@@ -49,16 +62,20 @@ def create_order(
         "user_id": user_id,
         "user_email": user_email,
         "items": items,
-        "total_amount": Decimal(str(round(total_amount, 2))),
+        "total_amount": total_amount,
         "shipping_address": shipping_address,
         "status": "pending",
         "created_at": now,
         "updated_at": now,
     }
 
-    table.put_item(Item=item)
+    # DynamoDB requires Decimal instead of float. Convert the entire item
+    # (including the nested items list with product_price and subtotal).
+    ddb_item = _floats_to_decimals(item)
+
+    table.put_item(Item=ddb_item)
     logger.info(f"Order created: {order_id} for user {user_email}")
-    return _serialize_decimals(item)
+    return _serialize_decimals(ddb_item)
 
 
 def get_order_by_id(order_id: str) -> Optional[dict]:
