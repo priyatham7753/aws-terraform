@@ -87,7 +87,7 @@ output "product_images_bucket" {
 }
 
 # ─── CloudWatch ───────────────────────────────────────────────────────────
-output "cloudwatch_dashboard_name" {
-  description = "CloudWatch dashboard name"
-  value       = module.cloudwatch.dashboard_name
-}
+# output "cloudwatch_dashboard_name" {
+#   description = "CloudWatch dashboard name"
+#   value       = module.cloudwatch.dashboard_name
+# }

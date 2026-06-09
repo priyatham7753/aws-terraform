@@ -29,12 +29,12 @@ echo "=== ShopMesh Backend Bootstrap START $(date) ==="
 # ─── 1. Update system ─────────────────────────────────────────────────────
 export DEBIAN_FRONTEND=noninteractive
 apt-get update -y
-apt-get upgrade -y -o Dpkg::Options::="--force-confold"
+# apt-get upgrade -y -o Dpkg::Options::="--force-confold"
 
 # ─── 2. Install dependencies ──────────────────────────────────────────────
 apt-get install -y \
   docker.io \
-  docker-compose-plugin \
+  docker-compose-v2 \
   curl \
   unzip \
   jq \
@@ -87,6 +87,9 @@ mkdir -p /opt/shopmesh/backend
 # ─── 6. Authenticate to ECR ───────────────────────────────────────────────
 # Extract ECR registry hostname from one of the repository URLs
 ECR_REGISTRY="$(echo "$AUTH_ECR_URL" | cut -d'/' -f1)"
+
+echo "Checking AWS identity..."
+aws sts get-caller-identity
 
 aws ecr get-login-password --region "$AWS_REGION" | \
   docker login --username AWS --password-stdin "$ECR_REGISTRY"
@@ -177,6 +180,11 @@ EOF
 docker pull "$AUTH_IMAGE"
 docker pull "$PRODUCT_IMAGE"
 docker pull "$ORDER_IMAGE"
+
+
+echo "Listing downloaded Docker images..."
+docker images
+
 
 cd /opt/shopmesh/backend
 docker compose up -d

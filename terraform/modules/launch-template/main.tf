@@ -25,8 +25,14 @@ resource "aws_launch_template" "frontend" {
   }
 
   network_interfaces {
-    associate_public_ip_address = false
+    associate_public_ip_address = true
     security_groups             = [var.frontend_sg_id]
+  }
+
+  metadata_options {
+    http_endpoint               = "enabled"
+    http_tokens                 = "required"
+    http_put_response_hop_limit = 2
   }
 
   key_name = var.key_pair_name != "" ? var.key_pair_name : null
@@ -63,6 +69,12 @@ resource "aws_launch_template" "backend" {
   network_interfaces {
     associate_public_ip_address = false
     security_groups             = [var.backend_sg_id]
+  }
+
+  metadata_options {
+    http_endpoint               = "enabled"
+    http_tokens                 = "required"
+    http_put_response_hop_limit = 2
   }
 
   key_name = var.key_pair_name != "" ? var.key_pair_name : null

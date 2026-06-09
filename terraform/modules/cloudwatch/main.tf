@@ -1,4 +1,4 @@
-# ─── CloudWatch Dashboard ─────────────────────────────────────────────────
+/*# ─── CloudWatch Dashboard ─────────────────────────────────────────────────
 resource "aws_cloudwatch_dashboard" "main" {
   dashboard_name = "${var.project_name}-dashboard"
 
@@ -63,7 +63,7 @@ resource "aws_cloudwatch_dashboard" "main" {
     ]
   })
 }
-
+*/
 # ─── CPU Alarm — Frontend ─────────────────────────────────────────────────
 resource "aws_cloudwatch_metric_alarm" "frontend_cpu_high" {
   alarm_name          = "${var.project_name}-frontend-cpu-high"

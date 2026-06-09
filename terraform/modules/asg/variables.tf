@@ -59,12 +59,12 @@ variable "frontend_min_size" {
 
 variable "frontend_desired_capacity" {
   type    = number
-  default = 2
+  default = 1
 }
 
 variable "frontend_max_size" {
   type    = number
-  default = 4
+  default = 1
 }
 
 variable "backend_min_size" {
@@ -74,10 +74,10 @@ variable "backend_min_size" {
 
 variable "backend_desired_capacity" {
   type    = number
-  default = 2
+  default = 1
 }
 
 variable "backend_max_size" {
   type    = number
-  default = 4
+  default = 1
 }

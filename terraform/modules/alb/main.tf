@@ -27,8 +27,8 @@ resource "aws_lb_target_group" "frontend" {
     protocol            = "HTTP"
     port                = "traffic-port"
     healthy_threshold   = 2
-    unhealthy_threshold = 3
-    timeout             = 5
+    unhealthy_threshold = 5
+    timeout             = 10
     interval            = 30
     matcher             = "200"
   }
@@ -76,8 +76,8 @@ resource "aws_lb_target_group" "auth" {
     path                = "/health"
     port                = "3001"
     healthy_threshold   = 2
-    unhealthy_threshold = 3
-    timeout             = 5
+    unhealthy_threshold = 5
+    timeout             = 10
     interval            = 30
     matcher             = "200"
   }
@@ -97,8 +97,8 @@ resource "aws_lb_target_group" "product" {
     path                = "/health"
     port                = "3002"
     healthy_threshold   = 2
-    unhealthy_threshold = 3
-    timeout             = 5
+    unhealthy_threshold = 5
+    timeout             = 10
     interval            = 30
     matcher             = "200"
   }
@@ -118,8 +118,8 @@ resource "aws_lb_target_group" "order" {
     path                = "/health"
     port                = "3003"
     healthy_threshold   = 2
-    unhealthy_threshold = 3
-    timeout             = 5
+    unhealthy_threshold = 5
+    timeout             = 10
     interval            = 30
     matcher             = "200"
   }

@@ -21,12 +21,12 @@ echo "=== ShopMesh Frontend Bootstrap START $(date) ==="
 # ─── 1. Update system ─────────────────────────────────────────────────────
 export DEBIAN_FRONTEND=noninteractive
 apt-get update -y
-apt-get upgrade -y -o Dpkg::Options::="--force-confold"
+#apt-get upgrade -y -o Dpkg::Options::="--force-confold"
 
 # ─── 2. Install dependencies ──────────────────────────────────────────────
 apt-get install -y \
   docker.io \
-  docker-compose-plugin \
+  docker-compose-v2 \
   curl \
   unzip \
   jq \

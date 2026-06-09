@@ -67,7 +67,7 @@ resource "aws_security_group" "frontend" {
 # ─── Internal ALB Security Group (Private) ────────────────────────────────
 resource "aws_security_group" "internal_alb" {
   name        = "${var.project_name}-internal-alb-sg"
-  description = "Security group for internal ALB (frontend → backend traffic)"
+  description = "Security group for internal ALB frontend to backend traffic"
   vpc_id      = var.vpc_id
 
   ingress {
