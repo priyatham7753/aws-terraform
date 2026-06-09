@@ -13,12 +13,12 @@ const AUTH_URL = INTERNAL_ALB
   : (process.env.REACT_APP_AUTH_SERVICE_URL || '/api/auth');
 
 const PRODUCT_URL = INTERNAL_ALB
-  ? `${INTERNAL_ALB}/api/products`
-  : (process.env.REACT_APP_PRODUCT_SERVICE_URL || '/api/products');
+  ? `${INTERNAL_ALB}/api/products/`
+  : (process.env.REACT_APP_PRODUCT_SERVICE_URL || '/api/products/');
 
 const ORDER_URL = INTERNAL_ALB
-  ? `${INTERNAL_ALB}/api/orders`
-  : (process.env.REACT_APP_ORDER_SERVICE_URL || '/api/orders');
+  ? `${INTERNAL_ALB}/api/orders/`
+  : (process.env.REACT_APP_ORDER_SERVICE_URL || '/api/orders/');
 
 // Helper: get auth headers
 const authHeader = () => {
