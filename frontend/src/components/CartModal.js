@@ -23,7 +23,7 @@ const CartModal = ({ onClose }) => {
         shipping_address: address.trim()
       };
       const res = await orderAPI.create(orderPayload);
-      setOrderId(res.data.id);
+      setOrderId(res.data.order_id);
       clearCart();
       setStep('success');
     } catch (err) {

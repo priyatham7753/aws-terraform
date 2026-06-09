@@ -54,7 +54,7 @@ const OrdersPage = () => {
       await orderAPI.updateStatus(orderId, 'cancelled');
       setOrders(prev =>
         prev.map(o =>
-          o.id === orderId ? { ...o, status: 'cancelled' } : o
+          o.order_id === orderId ? { ...o, status: 'cancelled' } : o
         )
       );
     } catch (err) {
@@ -132,11 +132,11 @@ const OrdersPage = () => {
       ) : (
         <div className="orders-list">
           {orders.map(order => (
-            <div key={order.id} className="order-card">
+            <div key={order.order_id} className="order-card">
               <div className="order-header">
                 <div>
                   <div className="order-id">
-                    Order #{order.id?.slice(-8).toUpperCase()}
+                    Order #{order.order_id?.slice(-8).toUpperCase()}
                   </div>
                   <div className="order-date">
                     {formatDate(order.created_at)}
@@ -151,10 +151,10 @@ const OrdersPage = () => {
                   {order.status === 'pending' && (
                     <button
                       className="btn btn-danger btn-sm"
-                      onClick={() => handleCancel(order.id)}
-                      disabled={cancelling === order.id}
+                      onClick={() => handleCancel(order.order_id)}
+                      disabled={cancelling === order.order_id}
                     >
-                      {cancelling === order.id ? 'Cancelling...' : 'Cancel'}
+                      {cancelling === order.order_id ? 'Cancelling...' : 'Cancel'}
                     </button>
                   )}
                 </div>

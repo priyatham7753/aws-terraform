@@ -13,12 +13,10 @@ COPY src/ ./src/
 ARG REACT_APP_AUTH_SERVICE_URL
 ARG REACT_APP_PRODUCT_SERVICE_URL
 ARG REACT_APP_ORDER_SERVICE_URL
-ARG REACT_APP_INTERNAL_ALB_URL
 
 ENV REACT_APP_AUTH_SERVICE_URL=$REACT_APP_AUTH_SERVICE_URL
 ENV REACT_APP_PRODUCT_SERVICE_URL=$REACT_APP_PRODUCT_SERVICE_URL
 ENV REACT_APP_ORDER_SERVICE_URL=$REACT_APP_ORDER_SERVICE_URL
-ENV REACT_APP_INTERNAL_ALB_URL=$REACT_APP_INTERNAL_ALB_URL
 
 RUN npm run build
 
@@ -40,7 +38,7 @@ COPY --from=builder /app/build /usr/share/nginx/html
 EXPOSE 80
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
-  CMD wget -qO- http://localhost:80/health || exit 1
+  CMD wget -qO- http://127.0.0.1/health || exit 1
 
 # envsubst replaces ${INTERNAL_ALB_URL} at container start, then starts nginx
 CMD ["/bin/sh", "-c", \
