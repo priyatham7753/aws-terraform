@@ -82,17 +82,11 @@ const loadSecrets = async () => {
 const start = async () => {
   await loadSecrets();
 
-  // Seed DynamoDB if empty
+  // Seed DynamoDB — idempotent, only inserts products not already present by name
   try {
-    const count = await productRepo.countActiveProducts();
-    if (count === 0) {
-      console.log('[PRODUCT-SERVICE] No products found — seeding...');
-      await productRepo.seedProducts();
-    } else {
-      console.log(`[PRODUCT-SERVICE] Found ${count} existing products`);
-    }
+    await productRepo.seedProducts();
   } catch (err) {
-    console.error(`[PRODUCT-SERVICE] Seeding check failed: ${err.message}`);
+    console.error(`[PRODUCT-SERVICE] Seeding failed: ${err.message}`);
     // Non-fatal — allow startup to continue
   }
 
