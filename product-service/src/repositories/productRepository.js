@@ -88,7 +88,7 @@ const getProductById = async (productId) => {
 /**
  * Create a new product item.
  */
-const createProduct = async ({ name, description, price, category, stock, imageUrl }) => {
+const createProduct = async ({ name, description, price, category, stock, imageUrl, rating, reviewCount, originalPrice }) => {
   const now = new Date().toISOString();
   const productId = uuidv4();
 
@@ -104,6 +104,10 @@ const createProduct = async ({ name, description, price, category, stock, imageU
     createdAt: now,
     updatedAt: now
   };
+
+  if (rating       != null) item.rating       = parseFloat(rating);
+  if (reviewCount  != null) item.reviewCount  = parseInt(reviewCount);
+  if (originalPrice != null) item.originalPrice = parseFloat(originalPrice);
 
   await docClient.send(
     new PutCommand({
@@ -165,14 +169,20 @@ const countActiveProducts = async () => {
  */
 const seedProducts = async () => {
   const sampleProducts = [
-    { name: 'Wireless Noise-Cancelling Headphones', description: 'Premium sound quality with 30-hour battery life and foldable design.', price: 299.99, category: 'Electronics', stock: 50, imageUrl: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400' },
-    { name: 'Mechanical Gaming Keyboard', description: 'RGB backlit mechanical keyboard with tactile switches and N-key rollover.', price: 149.99, category: 'Electronics', stock: 75, imageUrl: 'https://images.unsplash.com/photo-1541140532154-b024d705b90a?w=400' },
-    { name: 'Ergonomic Office Chair', description: 'Lumbar support, adjustable armrests, and breathable mesh back for all-day comfort.', price: 459.99, category: 'Furniture', stock: 20, imageUrl: 'https://images.unsplash.com/photo-1541558869434-2840d308329a?w=400' },
-    { name: 'Stainless Steel Water Bottle', description: 'Keeps drinks cold 24 hours or hot 12 hours, BPA-free with leak-proof lid.', price: 34.99, category: 'Sports', stock: 200, imageUrl: 'https://images.unsplash.com/photo-1602143407151-7111542de6e8?w=400' },
-    { name: 'Smart Watch Pro', description: 'Health monitoring, GPS, sleep tracking, and 7-day battery life.', price: 399.99, category: 'Electronics', stock: 35, imageUrl: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400' },
-    { name: 'Running Shoes Ultra Boost', description: 'Lightweight, responsive cushioning for everyday training and long runs.', price: 129.99, category: 'Sports', stock: 100, imageUrl: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400' },
-    { name: 'Portable Bluetooth Speaker', description: '360° surround sound, waterproof IPX7, 20-hour playtime.', price: 79.99, category: 'Electronics', stock: 60, imageUrl: 'https://images.unsplash.com/photo-1608043152269-423dbba4e7e1?w=400' },
-    { name: 'Organic Coffee Blend', description: 'Single-origin, fair-trade Ethiopian coffee beans, medium roast.', price: 24.99, category: 'Food', stock: 150, imageUrl: 'https://images.unsplash.com/photo-1447933601403-0c6688de566e?w=400' }
+    { name: 'Wireless Noise-Cancelling Headphones', description: 'Premium sound quality with 30-hour battery life and foldable design.', price: 299.99, originalPrice: 349.99, category: 'Electronics', stock: 50, imageUrl: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400', rating: 4.7, reviewCount: 2143 },
+    { name: 'Mechanical Gaming Keyboard', description: 'RGB backlit mechanical keyboard with tactile switches and N-key rollover.', price: 149.99, category: 'Electronics', stock: 75, imageUrl: 'https://images.unsplash.com/photo-1541140532154-b024d705b90a?w=400', rating: 4.6, reviewCount: 1582 },
+    { name: 'Ergonomic Office Chair', description: 'Lumbar support, adjustable armrests, and breathable mesh back for all-day comfort.', price: 459.99, category: 'Furniture', stock: 20, imageUrl: 'https://images.unsplash.com/photo-1541558869434-2840d308329a?w=400', rating: 4.4, reviewCount: 891 },
+    { name: 'Stainless Steel Water Bottle', description: 'Keeps drinks cold 24 hours or hot 12 hours, BPA-free with leak-proof lid.', price: 34.99, category: 'Sports', stock: 200, imageUrl: 'https://images.unsplash.com/photo-1602143407151-7111542de6e8?w=400', rating: 4.8, reviewCount: 4210 },
+    { name: 'Smart Watch Pro', description: 'Health monitoring, GPS, sleep tracking, and 7-day battery life.', price: 399.99, category: 'Electronics', stock: 35, imageUrl: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400', rating: 4.3, reviewCount: 763 },
+    { name: 'Running Shoes Ultra Boost', description: 'Lightweight, responsive cushioning for everyday training and long runs.', price: 129.99, originalPrice: 159.99, category: 'Sports', stock: 100, imageUrl: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400', rating: 4.5, reviewCount: 3319 },
+    { name: 'Portable Bluetooth Speaker', description: '360° surround sound, waterproof IPX7, 20-hour playtime.', price: 79.99, category: 'Electronics', stock: 60, imageUrl: 'https://images.unsplash.com/photo-1608043152269-423dbba4e7e1?w=400', rating: 4.6, reviewCount: 2187 },
+    { name: 'Organic Coffee Blend', description: 'Single-origin, fair-trade Ethiopian coffee beans, medium roast.', price: 24.99, category: 'Food', stock: 150, imageUrl: 'https://images.unsplash.com/photo-1447933601403-0c6688de566e?w=400', rating: 4.9, reviewCount: 1044 },
+    { name: 'Gaming Mouse Pro', description: 'Ultra-responsive 16,000 DPI sensor, ergonomic design, 8 programmable buttons, RGB lighting.', price: 79.99, category: 'Electronics', stock: 85, imageUrl: 'https://images.unsplash.com/photo-1527814050087-3793815479db?w=400', rating: 4.5, reviewCount: 312 },
+    { name: 'Portable SSD 1TB', description: 'Ultra-fast USB-C 3.1 Gen 2, 1050MB/s read speed, durable aluminum shell, compact design.', price: 149.99, category: 'Electronics', stock: 7, imageUrl: 'https://images.unsplash.com/photo-1597872200969-2b65d56bd16b?w=400', rating: 4.7, reviewCount: 587 },
+    { name: 'USB-C Hub 7-in-1', description: '4K HDMI, 3x USB 3.0, SD card reader, aluminum construction, plug-and-play, universal compatibility.', price: 49.99, category: 'Electronics', stock: 120, imageUrl: 'https://images.unsplash.com/photo-1625948515291-69613efd103f?w=400', rating: 4.4, reviewCount: 1205 },
+    { name: 'Wireless Charging Pad', description: '15W fast charging, Qi-certified, premium base, auto-sleep mode, works with all Qi-enabled phones.', price: 39.99, category: 'Electronics', stock: 95, imageUrl: 'https://images.unsplash.com/photo-1606933248051-5ce98a30b2b8?w=400', rating: 4.3, reviewCount: 892 },
+    { name: 'Adjustable Phone Stand', description: 'Premium aluminum alloy, 360° rotation, foldable design, works with all phones and tablets.', price: 29.99, category: 'Electronics', stock: 150, imageUrl: 'https://images.unsplash.com/photo-1591437281548-f0b6f8e8bb44?w=400', rating: 4.2, reviewCount: 673 },
+    { name: 'USB-C Fast Charging Cable', description: '65W power delivery, 2-meter braided nylon, quick charge enabled, 5-year warranty.', price: 19.99, originalPrice: 24.99, category: 'Electronics', stock: 200, imageUrl: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400', rating: 4.6, reviewCount: 2891 }
   ];
 
   for (const p of sampleProducts) {

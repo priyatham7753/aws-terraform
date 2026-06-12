@@ -45,7 +45,10 @@ const AuthPage = () => {
   return (
     <div className="auth-wrapper">
       <div className="auth-card">
-        <div className="auth-logo">ShopMesh</div>
+        <div className="auth-logo">
+          <span className="auth-logo-dot" />
+          ShopMesh
+        </div>
         <p className="auth-subtitle">
           {mode === 'login' ? 'Sign in to your account to continue' : 'Create an account to get started'}
         </p>

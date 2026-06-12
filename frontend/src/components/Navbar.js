@@ -14,23 +14,28 @@ const Navbar = () => {
 
   return (
     <nav className="navbar" role="navigation">
-      <NavLink to="/" className="navbar-brand">ShopMesh</NavLink>
+      <NavLink to="/" className="navbar-brand">
+        <span className="navbar-brand-dot" />
+        ShopMesh
+      </NavLink>
+
       <div className="navbar-links">
-        <NavLink to="/products" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} id="nav-products">
+        <NavLink to="/products" className={({ isActive }) => `nav-link${isActive ? ' active' : ''}`} id="nav-products">
           Products
         </NavLink>
-        <NavLink to="/orders" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} id="nav-orders">
+        <NavLink to="/orders" className={({ isActive }) => `nav-link${isActive ? ' active' : ''}`} id="nav-orders">
           Orders {totalItems > 0 && <span className="cart-badge">{totalItems}</span>}
         </NavLink>
       </div>
+
       {user && (
         <div className="nav-user">
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', lineHeight: 1.2 }}>
-            <span style={{ fontSize: '0.875rem', fontWeight: 500, color: 'var(--text-primary)' }}>{user.name}</span>
-            <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Customer</span>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', lineHeight: 1.3 }}>
+            <span style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--gray-900)' }}>{user.name}</span>
+            <span style={{ fontSize: '0.75rem', color: 'var(--gray-500)' }}>Customer</span>
           </div>
           <div className="nav-avatar" title={user.name}>{getInitials(user.name)}</div>
-          <div style={{ width: '1px', height: '24px', background: 'var(--border)', margin: '0 0.25rem' }}></div>
+          <div className="nav-divider" />
           <button className="btn-logout" onClick={logout} id="logout-btn">Log out</button>
         </div>
       )}

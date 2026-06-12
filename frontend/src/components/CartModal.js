@@ -2,27 +2,49 @@ import React, { useState } from 'react';
 import { useCart } from '../context/CartContext';
 import { orderAPI } from '../services/api';
 
+const STEP_LABELS = { cart: 'Cart', checkout: 'Checkout', success: 'Complete' };
+const STEP_ORDER = ['cart', 'checkout', 'success'];
+
+const StepIndicator = ({ current }) => {
+  const currentIdx = STEP_ORDER.indexOf(current);
+  return (
+    <div className="checkout-steps">
+      {STEP_ORDER.map((s, i) => {
+        const isDone    = i < currentIdx;
+        const isActive  = i === currentIdx;
+        return (
+          <div key={s} className={`step-item${isActive ? ' active' : isDone ? ' done' : ''}`}>
+            <div className="step-circle">{isDone ? '✓' : i + 1}</div>
+            <div className="step-label">{STEP_LABELS[s]}</div>
+          </div>
+        );
+      })}
+    </div>
+  );
+};
+
 const CartModal = ({ onClose }) => {
   const { items, removeFromCart, updateQuantity, clearCart, totalAmount } = useCart();
-  const [step, setStep] = useState('cart'); // 'cart' | 'checkout' | 'success'
+  const [step, setStep]       = useState('cart');
   const [address, setAddress] = useState('');
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError]     = useState('');
   const [orderId, setOrderId] = useState(null);
+
+  const TITLES = { cart: 'Shopping Cart', checkout: 'Checkout', success: 'Order Confirmed' };
 
   const handlePlaceOrder = async () => {
     if (!address.trim() || address.trim().length < 5) {
-      setError('Please enter a valid shipping address (at least 5 characters)');
+      setError('Please enter a valid shipping address (at least 5 characters).');
       return;
     }
     setLoading(true);
     setError('');
     try {
-      const orderPayload = {
+      const res = await orderAPI.create({
         items: items.map(i => ({ product_id: i._id, quantity: i.quantity })),
-        shipping_address: address.trim()
-      };
-      const res = await orderAPI.create(orderPayload);
+        shipping_address: address.trim(),
+      });
       setOrderId(res.data.order_id);
       clearCart();
       setStep('success');
@@ -37,110 +59,93 @@ const CartModal = ({ onClose }) => {
   return (
     <div className="modal-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
       <div className="modal">
+
         <div className="modal-header">
-          <h2 className="modal-title">
-            {step === 'cart' ? 'Your Cart' : step === 'checkout' ? 'Checkout' : 'Order Confirmed'}
-          </h2>
-          <button className="modal-close" onClick={onClose} id="close-cart-btn">✕</button>
+          <h2 className="modal-title">{TITLES[step]}</h2>
+          <button className="modal-close" onClick={onClose} id="close-cart-btn" aria-label="Close">&#x2715;</button>
         </div>
 
-        {step === 'success' && (
-          <div style={{ textAlign: 'center', padding: '1rem 0 2rem' }}>
-            <div style={{ width: '64px', height: '64px', background: 'var(--success-bg)', color: 'var(--success)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2rem', margin: '0 auto 1.5rem' }}>✓</div>
-            <h3 style={{ fontSize: '1.25rem', fontWeight: 600, marginBottom: '0.5rem', color: 'var(--text-primary)' }}>
-              Thank you for your order!
-            </h3>
-            <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem', fontSize: '0.875rem' }}>We've received your order and will begin processing it right away.</p>
-            {orderId && (
-              <div style={{ background: 'var(--bg-hover)', padding: '1rem', borderRadius: 'var(--radius-md)', marginBottom: '2rem' }}>
-                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 500, textTransform: 'uppercase', marginBottom: '0.25rem' }}>Order Reference</div>
-                <div style={{ color: 'var(--text-primary)', fontWeight: 600, fontFamily: 'monospace' }}>
-                  #{orderId.slice(-8).toUpperCase()}
-                </div>
-              </div>
-            )}
-            <button className="btn btn-primary btn-full" onClick={onClose} id="order-success-close-btn">
-              Continue Shopping
-            </button>
-          </div>
-        )}
+        {step !== 'success' && <StepIndicator current={step} />}
 
+        {/* ── CART ── */}
         {step === 'cart' && (
-          <>
-            {items.length === 0 ? (
-              <div className="empty-state" style={{ padding: '3rem 2rem' }}>
-                <div className="empty-state-icon" style={{ opacity: 0.5 }}>🛒</div>
-                <h3>Your cart is empty</h3>
-                <p>Looks like you haven't added anything yet.</p>
-              </div>
-            ) : (
-              <>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginBottom: '1.5rem', maxHeight: '50vh', overflowY: 'auto', paddingRight: '0.5rem' }}>
-                  {items.map(item => (
-                    <div key={item._id} style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '1rem', background: 'var(--bg-primary)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)' }}>
-                      <div style={{ flex: 1 }}>
-                        <div style={{ fontWeight: 500, fontSize: '0.875rem', color: 'var(--text-primary)', marginBottom: '0.25rem' }}>{item.name}</div>
-                        <div style={{ color: 'var(--text-secondary)', fontSize: '0.8125rem' }}>${item.price.toFixed(2)}</div>
-                      </div>
-                      <div style={{ display: 'flex', alignItems: 'center', background: 'var(--bg-secondary)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)' }}>
-                        <button className="btn btn-sm" style={{ padding: '0.25rem 0.5rem', border: 'none', background: 'transparent' }}
-                          onClick={() => updateQuantity(item._id, item.quantity - 1)}>−</button>
-                        <span style={{ fontWeight: 500, fontSize: '0.875rem', minWidth: '1.5rem', textAlign: 'center' }}>{item.quantity}</span>
-                        <button className="btn btn-sm" style={{ padding: '0.25rem 0.5rem', border: 'none', background: 'transparent' }}
-                          onClick={() => updateQuantity(item._id, item.quantity + 1)}
-                          disabled={item.quantity >= item.stock}>+</button>
-                      </div>
-                      <div style={{ fontWeight: 600, minWidth: '4rem', textAlign: 'right', color: 'var(--text-primary)' }}>
-                        ${(item.price * item.quantity).toFixed(2)}
-                      </div>
-                      <button className="btn btn-sm" style={{ padding: '0.25rem 0.5rem', background: 'transparent', border: 'none', color: 'var(--text-muted)' }}
-                        onClick={() => removeFromCart(item._id)} title="Remove item">✕</button>
+          items.length === 0 ? (
+            <div className="empty-state">
+              <h3>Your cart is empty</h3>
+              <p>Browse products and add items to get started.</p>
+            </div>
+          ) : (
+            <>
+              <div className="cart-list">
+                {items.map(item => (
+                  <div key={item._id} className="cart-item">
+                    <div className="cart-item-info">
+                      <div className="cart-item-name">{item.name}</div>
+                      <div className="cart-item-price">${item.price.toFixed(2)} each</div>
                     </div>
-                  ))}
-                </div>
+                    <div className="qty-control">
+                      <button
+                        className="qty-btn"
+                        onClick={() => updateQuantity(item._id, item.quantity - 1)}
+                        disabled={item.quantity <= 1}
+                      >−</button>
+                      <span className="qty-value">{item.quantity}</span>
+                      <button
+                        className="qty-btn"
+                        onClick={() => updateQuantity(item._id, item.quantity + 1)}
+                        disabled={item.quantity >= item.stock}
+                      >+</button>
+                    </div>
+                    <div className="cart-item-total">${(item.price * item.quantity).toFixed(2)}</div>
+                    <button
+                      className="cart-remove-btn"
+                      onClick={() => removeFromCart(item._id)}
+                      title="Remove"
+                    >&#x2715;</button>
+                  </div>
+                ))}
+              </div>
 
-                <div style={{ borderTop: '1px solid var(--border)', paddingTop: '1.25rem', marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ fontWeight: 500, color: 'var(--text-secondary)' }}>Subtotal</span>
-                  <span style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--text-primary)' }}>
-                    ${totalAmount.toFixed(2)}
-                  </span>
-                </div>
+              <div className="cart-subtotal">
+                <span className="cart-subtotal-label">Subtotal</span>
+                <span className="cart-subtotal-value">${totalAmount.toFixed(2)}</span>
+              </div>
 
-                <div style={{ display: 'flex', gap: '0.75rem' }}>
-                  <button className="btn btn-secondary" onClick={() => { clearCart(); }} style={{ flex: 1 }} id="clear-cart-btn">
-                    Clear Cart
-                  </button>
-                  <button className="btn btn-primary" onClick={() => setStep('checkout')} style={{ flex: 2 }} id="proceed-checkout-btn">
-                    Checkout
-                  </button>
-                </div>
-              </>
-            )}
-          </>
+              <div style={{ display: 'flex', gap: '0.75rem' }}>
+                <button className="btn btn-secondary" onClick={clearCart} id="clear-cart-btn" style={{ flex: 1 }}>
+                  Clear Cart
+                </button>
+                <button className="btn btn-primary" onClick={() => setStep('checkout')} id="proceed-checkout-btn" style={{ flex: 2 }}>
+                  Checkout
+                </button>
+              </div>
+            </>
+          )
         )}
 
+        {/* ── CHECKOUT ── */}
         {step === 'checkout' && (
           <>
-            <div style={{ marginBottom: '2rem', background: 'var(--bg-primary)', padding: '1.25rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)' }}>
-              <h4 style={{ fontWeight: 600, marginBottom: '1rem', color: 'var(--text-primary)', fontSize: '0.875rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Order Summary</h4>
+            <div className="order-summary-card">
+              <div className="order-summary-title">Order Summary</div>
               {items.map(item => (
-                <div key={item._id} style={{ display: 'flex', justifyContent: 'space-between', padding: '0.375rem 0', fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
-                  <span>{item.name} <span style={{ color: 'var(--text-muted)' }}>×{item.quantity}</span></span>
-                  <span style={{ color: 'var(--text-primary)', fontWeight: 500 }}>${(item.price * item.quantity).toFixed(2)}</span>
+                <div key={item._id} className="order-summary-row">
+                  <span>{item.name} <span style={{ color: 'var(--gray-500)', fontWeight: 400 }}>×{item.quantity}</span></span>
+                  <strong>${(item.price * item.quantity).toFixed(2)}</strong>
                 </div>
               ))}
-              <div style={{ borderTop: '1px solid var(--border-strong)', marginTop: '0.75rem', paddingTop: '0.75rem', display: 'flex', justifyContent: 'space-between', fontWeight: 600, color: 'var(--text-primary)' }}>
+              <div className="order-summary-total">
                 <span>Total Due</span>
                 <span>${totalAmount.toFixed(2)}</span>
               </div>
             </div>
 
-            <div className="form-group" style={{ marginBottom: '1.5rem' }}>
+            <div className="form-group">
               <label className="form-label" htmlFor="shipping-address">Shipping Address</label>
               <textarea
                 id="shipping-address"
                 className="form-textarea"
-                placeholder="123 Main St, City, State, ZIP, Country"
+                placeholder="123 Main St, City, State, ZIP"
                 value={address}
                 onChange={e => { setAddress(e.target.value); setError(''); }}
                 rows={3}
@@ -157,18 +162,39 @@ const CartModal = ({ onClose }) => {
                 className="btn btn-primary"
                 onClick={handlePlaceOrder}
                 disabled={loading}
-                style={{ flex: 2 }}
                 id="place-order-btn"
+                style={{ flex: 2 }}
               >
                 {loading ? (
-                  <><span className="spinner" style={{ width: 16, height: 16, borderWidth: 2 }} /> Processing...</>
-                ) : (
-                  'Place Order'
-                )}
+                  <><span className="spinner" style={{ width: 16, height: 16, borderWidth: 2, marginRight: 8 }} />Processing...</>
+                ) : 'Place Order'}
               </button>
             </div>
           </>
         )}
+
+        {/* ── SUCCESS ── */}
+        {step === 'success' && (
+          <div style={{ textAlign: 'center', padding: '0.5rem 0 1rem' }}>
+            <div className="success-icon">&#x2713;</div>
+            <h3 style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--gray-900)', marginBottom: '0.5rem' }}>
+              Your order is confirmed
+            </h3>
+            <p style={{ color: 'var(--gray-600)', fontSize: '0.9375rem', lineHeight: 1.6 }}>
+              We'll send you updates at each stage of your delivery.
+            </p>
+            {orderId && (
+              <div className="order-ref-box">
+                <div className="order-ref-label">Order ID</div>
+                <div className="order-ref-value">{orderId.slice(-8).toUpperCase()}</div>
+              </div>
+            )}
+            <button className="btn btn-primary btn-full" onClick={onClose} id="order-success-close-btn">
+              Continue Shopping
+            </button>
+          </div>
+        )}
+
       </div>
     </div>
   );

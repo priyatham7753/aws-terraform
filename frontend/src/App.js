@@ -11,10 +11,10 @@ import OrdersPage from './pages/OrdersPage';
 const LoadingScreen = () => (
   <div style={{
     minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center',
-    flexDirection: 'column', gap: '1rem', background: 'var(--bg-primary)'
+    flexDirection: 'column', gap: '1rem', background: 'var(--gray-50)'
   }}>
     <div className="spinner" style={{ width: 40, height: 40, borderWidth: '3px' }} />
-    <div style={{ fontWeight: 600, color: 'var(--text-primary)', fontSize: '1.25rem', letterSpacing: '-0.02em' }}>
+    <div style={{ fontWeight: 700, color: 'var(--gray-900)', fontSize: '1.125rem', letterSpacing: '-0.025em' }}>
       ShopMesh
     </div>
   </div>
