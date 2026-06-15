@@ -8,4 +8,5 @@ output "auth_target_group_arn" { value = aws_lb_target_group.auth.arn }
 output "auth_target_group_arn_suffix" { value = aws_lb_target_group.auth.arn_suffix }
 output "product_target_group_arn" { value = aws_lb_target_group.product.arn }
 output "order_target_group_arn" { value = aws_lb_target_group.order.arn }
-output "internal_listener_arn" { value = aws_lb_listener.internal_http.arn }
+output "internal_listener_arn"        { value = aws_lb_listener.internal_http.arn }
+output "external_https_listener_arn"  { value = aws_lb_listener.external_https.arn }

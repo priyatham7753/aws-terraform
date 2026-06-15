@@ -25,3 +25,11 @@ cloudfront_price_class = "PriceClass_100"
 docker_image_tag = "latest"
 
 alert_email = "saidevops753@gmail.com"
+
+# !! CHANGE THIS to your real domain before running terraform apply !!
+# Route53 hosted zone will be created for this domain.
+# After first apply: run `terraform output route53_name_servers` and update
+# your domain registrar to use those 4 NS records. ACM validation is automatic
+# once the NS records propagate (typically 5–60 minutes).
+domain_name       = "shopmesh.shop"
+create_www_record = true

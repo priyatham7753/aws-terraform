@@ -111,3 +111,15 @@ variable "alert_email" {
   type        = string
   default     = "ops@example.com"
 }
+
+# ─── HTTPS / ACM ──────────────────────────────────────────────────────────
+variable "domain_name" {
+  description = "Custom domain name for the application (e.g. shop.example.com). Used for ACM certificate and CloudFront alias."
+  type        = string
+}
+
+variable "create_www_record" {
+  description = "Whether to create a www.domain_name alias record in Route53 pointing to CloudFront"
+  type        = bool
+  default     = true
+}

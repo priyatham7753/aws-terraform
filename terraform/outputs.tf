@@ -91,3 +91,20 @@ output "product_images_bucket" {
 #   description = "CloudWatch dashboard name"
 #   value       = module.cloudwatch.dashboard_name
 # }
+
+# ─── Route53 ──────────────────────────────────────────────────────────────
+output "route53_zone_id" {
+  description = "Route53 hosted zone ID"
+  value       = module.route53.zone_id
+}
+
+output "route53_name_servers" {
+  description = "NS records — update your domain registrar to use these 4 nameservers after first apply"
+  value       = module.route53.name_servers
+}
+
+# ─── Application URL ──────────────────────────────────────────────────────
+output "app_url" {
+  description = "Public HTTPS URL of the application"
+  value       = "https://${var.domain_name}"
+}

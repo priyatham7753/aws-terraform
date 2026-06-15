@@ -45,13 +45,8 @@ resource "aws_security_group" "frontend" {
     security_groups = [aws_security_group.external_alb.id]
   }
 
-  ingress {
-    description = "SSH (restrict to your IP in production)"
-    from_port   = 22
-    to_port     = 22
-    protocol    = "tcp"
-    cidr_blocks = var.ssh_cidr_blocks
-  }
+  # SSH removed — access via SSM Session Manager (AmazonSSMManagedInstanceCore)
+  # To re-enable: add ingress block for port 22 with var.ssh_cidr_blocks
 
   egress {
     description = "All outbound (NAT gateway)"
@@ -127,13 +122,7 @@ resource "aws_security_group" "backend" {
     self        = true
   }
 
-  ingress {
-    description = "SSH"
-    from_port   = 22
-    to_port     = 22
-    protocol    = "tcp"
-    cidr_blocks = var.ssh_cidr_blocks
-  }
+  # SSH removed — access via SSM Session Manager (AmazonSSMManagedInstanceCore)
 
   egress {
     description = "All outbound (NAT gateway to AWS APIs)"

@@ -4,6 +4,100 @@ locals {
   environment  = var.environment
 }
 
+# ─── ACM Certificates ─────────────────────────────────────────────────────
+# One cert per region:
+#   • alb       → default region  (us-east-1)  — attached to ALB HTTPS listener
+#   • cloudfront → forced us-east-1             — CloudFront requirement
+# Both share the same domain_name so they produce the same DNS validation CNAME.
+# Route53 creates that CNAME automatically; no manual DNS work required.
+
+resource "aws_acm_certificate" "alb" {
+  domain_name       = var.domain_name
+  validation_method = "DNS"
+
+  lifecycle {
+    create_before_destroy = true
+  }
+
+  tags = { Name = "${local.project_name}-alb-cert" }
+}
+
+resource "aws_acm_certificate" "cloudfront" {
+  provider          = aws.us_east_1
+  domain_name       = var.domain_name
+  validation_method = "DNS"
+
+  lifecycle {
+    create_before_destroy = true
+  }
+
+  tags = { Name = "${local.project_name}-cloudfront-cert" }
+}
+
+# ─── Route53 ──────────────────────────────────────────────────────────────
+# Creates:
+#   1. Hosted zone for var.domain_name
+#   2. ACM CNAME validation records (auto-validates both certs above)
+#   3. A alias record: domain_name → CloudFront
+#   4. A alias record: www.domain_name → CloudFront
+#
+# IMPORTANT: After first `terraform apply`, run:
+#   terraform output route53_name_servers
+# Then update your domain registrar to use these 4 NS records.
+# Route53 validation is instant once NS records propagate (minutes–hours).
+
+module "route53" {
+  source       = "./modules/route53"
+  project_name = local.project_name
+  domain_name  = var.domain_name
+
+  # Merge validation options from both certs — duplicate domain_name keys are
+  # collapsed in the module's for_each (they produce identical CNAME values).
+  # Build a map keyed by domain_name first (deduplicates identical CNAME entries
+  # produced by both certs for the same domain), then convert back to a list.
+  cert_validation_options = [
+    for key, dvos in {
+      for dvo in concat(
+        [for dvo in aws_acm_certificate.alb.domain_validation_options : {
+          domain_name           = dvo.domain_name
+          resource_record_name  = dvo.resource_record_name
+          resource_record_type  = dvo.resource_record_type
+          resource_record_value = dvo.resource_record_value
+        }],
+        [for dvo in aws_acm_certificate.cloudfront.domain_validation_options : {
+          domain_name           = dvo.domain_name
+          resource_record_name  = dvo.resource_record_name
+          resource_record_type  = dvo.resource_record_type
+          resource_record_value = dvo.resource_record_value
+        }]
+      ) : dvo.domain_name => dvo...
+    } : dvos[0]
+  ]
+}
+
+# Wait for both ACM certs to reach ISSUED state.
+# Terraform blocks here until Route53 propagates the validation CNAME
+# (typically 1–5 minutes after NS records are in place at the registrar).
+
+resource "aws_acm_certificate_validation" "alb" {
+  certificate_arn         = aws_acm_certificate.alb.arn
+  validation_record_fqdns = module.route53.acm_validation_record_fqdns
+
+  timeouts {
+    create = "15m"
+  }
+}
+
+resource "aws_acm_certificate_validation" "cloudfront" {
+  provider                = aws.us_east_1
+  certificate_arn         = aws_acm_certificate.cloudfront.arn
+  validation_record_fqdns = module.route53.acm_validation_record_fqdns
+
+  timeouts {
+    create = "15m"
+  }
+}
+
 # ─── VPC ──────────────────────────────────────────────────────────────────
 module "vpc" {
   source               = "./modules/vpc"
@@ -78,6 +172,7 @@ module "alb" {
   external_alb_sg_id = module.security_groups.external_alb_sg_id
   internal_alb_sg_id = module.security_groups.internal_alb_sg_id
   alb_logs_bucket    = module.s3.alb_logs_bucket_name
+  certificate_arn    = aws_acm_certificate_validation.alb.certificate_arn
 }
 
 # ─── Launch Templates ─────────────────────────────────────────────────────
@@ -153,6 +248,38 @@ module "cloudfront" {
   external_alb_dns_name  = module.alb.external_alb_dns_name
   cloudfront_logs_bucket = module.s3.cloudfront_logs_bucket_name
   price_class            = var.cloudfront_price_class
+  certificate_arn        = aws_acm_certificate_validation.cloudfront.certificate_arn
+  domain_name            = var.domain_name
+}
+
+# ─── Route53 A Records (CloudFront alias) ─────────────────────────────────
+# Created after both module.route53 (zone) and module.cloudfront (distribution)
+# are ready. This avoids the circular dependency that would occur if these
+# records lived inside the route53 module.
+
+resource "aws_route53_record" "cloudfront_alias" {
+  zone_id = module.route53.zone_id
+  name    = var.domain_name
+  type    = "A"
+
+  alias {
+    name                   = module.cloudfront.cloudfront_domain_name
+    zone_id                = "Z2FDTNDATAQYW2" # CloudFront hosted zone ID (fixed AWS constant)
+    evaluate_target_health = false
+  }
+}
+
+resource "aws_route53_record" "www_alias" {
+  count   = var.create_www_record ? 1 : 0
+  zone_id = module.route53.zone_id
+  name    = "www.${var.domain_name}"
+  type    = "A"
+
+  alias {
+    name                   = module.cloudfront.cloudfront_domain_name
+    zone_id                = "Z2FDTNDATAQYW2"
+    evaluate_target_health = false
+  }
 }
 
 # ─── CloudWatch ───────────────────────────────────────────────────────────

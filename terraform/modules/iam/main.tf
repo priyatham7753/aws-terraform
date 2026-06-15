@@ -169,6 +169,12 @@ resource "aws_iam_instance_profile" "backend_ec2" {
   role = aws_iam_role.backend_ec2.name
 }
 
+# ─── SSM: allows Systems Manager Session Manager (replaces SSH) ───────────
+resource "aws_iam_role_policy_attachment" "backend_ssm" {
+  role       = aws_iam_role.backend_ec2.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+}
+
 # ─── Frontend EC2 IAM Role ────────────────────────────────────────────────
 resource "aws_iam_role" "frontend_ec2" {
   name = "${var.project_name}-frontend-ec2-role"
@@ -224,6 +230,11 @@ resource "aws_iam_role_policy" "frontend_ecr" {
 resource "aws_iam_instance_profile" "frontend_ec2" {
   name = "${var.project_name}-frontend-ec2-profile"
   role = aws_iam_role.frontend_ec2.name
+}
+
+resource "aws_iam_role_policy_attachment" "frontend_ssm" {
+  role       = aws_iam_role.frontend_ec2.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
 }
 
 # ─── EventBridge IAM Role ─────────────────────────────────────────────────

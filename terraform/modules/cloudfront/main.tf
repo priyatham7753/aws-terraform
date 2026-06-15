@@ -4,8 +4,9 @@ resource "aws_cloudfront_distribution" "main" {
   default_root_object = "index.html"
   price_class         = var.price_class
   comment             = "${var.project_name} CloudFront Distribution"
+  aliases             = [var.domain_name]
 
-  # Origin: External ALB
+  # Origin: External ALB — HTTPS only (ALB listener now serves 443)
   origin {
     domain_name = var.external_alb_dns_name
     origin_id   = "external-alb"
@@ -13,7 +14,7 @@ resource "aws_cloudfront_distribution" "main" {
     custom_origin_config {
       http_port              = 80
       https_port             = 443
-      origin_protocol_policy = "http-only"
+      origin_protocol_policy = "https-only"
       origin_ssl_protocols   = ["TLSv1.2"]
     }
   }
@@ -111,7 +112,9 @@ resource "aws_cloudfront_distribution" "main" {
   }
 
   viewer_certificate {
-    cloudfront_default_certificate = true
+    acm_certificate_arn      = var.certificate_arn
+    ssl_support_method       = "sni-only"
+    minimum_protocol_version = "TLSv1.2_2021"
   }
 
   tags = { Name = "${var.project_name}-cloudfront" }
