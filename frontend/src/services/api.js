@@ -20,6 +20,10 @@ const ORDER_URL = INTERNAL_ALB
   ? `${INTERNAL_ALB}/api/orders/`
   : (process.env.REACT_APP_ORDER_SERVICE_URL || '/api/orders/');
 
+const ANALYTICS_URL = INTERNAL_ALB
+  ? `${INTERNAL_ALB}/api/analytics`
+  : (process.env.REACT_APP_ANALYTICS_SERVICE_URL || '/api/analytics');
+
 // Helper: get auth headers
 const authHeader = () => {
   const token = localStorage.getItem('token');
@@ -51,4 +55,12 @@ export const orderAPI = {
   getById: (id) => axios.get(`${ORDER_URL}/${id}`, { headers: authHeader() }),
   updateStatus: (id, status) =>
     axios.patch(`${ORDER_URL}/${id}/status`, { status }, { headers: authHeader() }),
+};
+
+// ─── Analytics API (admin only) ───────────────────────────────────────────
+export const analyticsAPI = {
+  getInventoryForecast: () =>
+    axios.get(`${ANALYTICS_URL}/inventory-forecast`, { headers: authHeader() }),
+  getDemographics: () =>
+    axios.get(`${ANALYTICS_URL}/demographics`, { headers: authHeader() }),
 };

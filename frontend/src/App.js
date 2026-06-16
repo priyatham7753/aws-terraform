@@ -6,6 +6,7 @@ import Navbar from './components/Navbar';
 import AuthPage from './pages/AuthPage';
 import ProductsPage from './pages/ProductsPage';
 import OrdersPage from './pages/OrdersPage';
+import AdminPage from './pages/AdminPage';
 
 // Loading screen
 const LoadingScreen = () => (
@@ -25,6 +26,15 @@ const PrivateRoute = ({ children }) => {
   const { isAuthenticated, loading } = useAuth();
   if (loading) return <LoadingScreen />;
   if (!isAuthenticated) return <Navigate to="/auth" replace />;
+  return children;
+};
+
+// Admin-only route
+const AdminRoute = ({ children }) => {
+  const { user, isAuthenticated, loading } = useAuth();
+  if (loading) return <LoadingScreen />;
+  if (!isAuthenticated) return <Navigate to="/auth" replace />;
+  if (user?.role !== 'admin') return <Navigate to="/products" replace />;
   return children;
 };
 
@@ -73,6 +83,16 @@ const AppRoutes = () => (
             <OrdersPage />
           </AppLayout>
         </PrivateRoute>
+      }
+    />
+    <Route
+      path="/admin"
+      element={
+        <AdminRoute>
+          <AppLayout>
+            <AdminPage />
+          </AppLayout>
+        </AdminRoute>
       }
     />
     <Route path="*" element={<Navigate to="/products" replace />} />

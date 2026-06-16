@@ -164,6 +164,26 @@ resource "aws_iam_role_policy" "backend_s3_product_images" {
   })
 }
 
+resource "aws_iam_role_policy" "backend_bedrock" {
+  name = "${var.project_name}-backend-bedrock"
+  role = aws_iam_role.backend_ec2.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect = "Allow"
+      Action = [
+        "bedrock:InvokeModel",
+        "bedrock:InvokeModelWithResponseStream"
+      ]
+      Resource = [
+        "arn:aws:bedrock:${var.aws_region}::foundation-model/anthropic.claude-haiku-4-5-20251001",
+        "arn:aws:bedrock:${var.aws_region}::foundation-model/anthropic.claude-*"
+      ]
+    }]
+  })
+}
+
 resource "aws_iam_instance_profile" "backend_ec2" {
   name = "${var.project_name}-backend-ec2-profile"
   role = aws_iam_role.backend_ec2.name

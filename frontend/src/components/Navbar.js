@@ -26,13 +26,20 @@ const Navbar = () => {
         <NavLink to="/orders" className={({ isActive }) => `nav-link${isActive ? ' active' : ''}`} id="nav-orders">
           Orders {totalItems > 0 && <span className="cart-badge">{totalItems}</span>}
         </NavLink>
+        {user?.role === 'admin' && (
+          <NavLink to="/admin" className={({ isActive }) => `nav-link${isActive ? ' active' : ''}`} id="nav-admin">
+            Admin
+          </NavLink>
+        )}
       </div>
 
       {user && (
         <div className="nav-user">
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', lineHeight: 1.3 }}>
             <span style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--gray-900)' }}>{user.name}</span>
-            <span style={{ fontSize: '0.75rem', color: 'var(--gray-500)' }}>Customer</span>
+            <span style={{ fontSize: '0.75rem', color: user.role === 'admin' ? '#6366f1' : 'var(--gray-500)', fontWeight: user.role === 'admin' ? 700 : 400 }}>
+              {user.role === 'admin' ? 'Admin' : 'Customer'}
+            </span>
           </div>
           <div className="nav-avatar" title={user.name}>{getInitials(user.name)}</div>
           <div className="nav-divider" />
