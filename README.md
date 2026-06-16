@@ -532,4 +532,153 @@ terraform state show module.vpc.aws_vpc.main
 - DynamoDB tables have encryption at rest + PITR enabled
 - S3 buckets have public access blocked
 - Security groups restrict traffic to minimum required ports
+
+---
+
+## API Reference
+
+### Auth Service — `POST /api/auth/register`
+
+Register a new user account. Returns a JWT token on success.
+
+**Request body:**
+```json
+{
+  "name": "Jane Doe",
+  "email": "jane@example.com",
+  "password": "secret123",
+  "gender": "Female",
+  "age": 28
+}
+```
+
+| Field | Type | Constraints |
+|-------|------|-------------|
+| `name` | string | 2–50 characters |
+| `email` | string | valid email format |
+| `password` | string | minimum 6 characters |
+| `gender` | string | `"Male"` \| `"Female"` \| `"Other"` |
+| `age` | integer | 13–100 |
+
+**Success response `201`:**
+```json
+{
+  "message": "User registered successfully",
+  "token": "<jwt>",
+  "user": {
+    "userId": "uuid",
+    "name": "Jane Doe",
+    "email": "jane@example.com",
+    "gender": "Female",
+    "age": 28,
+    "role": "user",
+    "createdAt": "2025-01-01T00:00:00.000Z"
+  }
+}
+```
+
+**Error responses:**
+- `400` — validation failure (`errors` array)
+- `409` — email already registered
+
+---
+
+### Product Service — Product Schema
+
+Products stored in DynamoDB include a `stock` field that tracks available inventory.
+
+```json
+{
+  "productId": "uuid",
+  "name": "Wireless Headphones",
+  "description": "...",
+  "price": 299.99,
+  "category": "Electronics",
+  "stock": 42,
+  "imageUrl": "https://...",
+  "isActive": true,
+  "createdAt": "2025-01-01T00:00:00.000Z",
+  "updatedAt": "2025-01-01T00:00:00.000Z"
+}
+```
+
+The `stock` field is decremented atomically when an order is placed and restored automatically if order creation fails. When `stock` drops below 5, an SNS alert is published to `SNS_ALERTS_TOPIC_ARN`.
+
+#### `PATCH /api/products/:id/decrement-stock` (internal)
+
+Called by the order service to atomically decrement stock. Requires a valid JWT.
+
+**Request body:** `{ "quantity": 2 }`
+
+**Responses:**
+- `200` — `{ "success": true, "product": { ...updatedProduct } }`
+- `400` — invalid quantity
+- `409` — `{ "success": false, "message": "Insufficient stock available" }`
+- `500` — DynamoDB error
+
+#### `PATCH /api/products/:id/restore-stock` (internal)
+
+Called by the order service to roll back a stock decrement when order creation fails. Requires a valid JWT.
+
+**Request body:** `{ "quantity": 2 }`
+
+**Responses:**
+- `200` — `{ "success": true" }`
+- `500` — DynamoDB error
+
+---
+
+### Order Service — `POST /api/orders/`
+
+Create a new order. Requires `Authorization: Bearer <token>` header.
+
+**Request body:**
+```json
+{
+  "items": [
+    { "product_id": "uuid", "quantity": 2 }
+  ],
+  "shipping_address": "123 Main St, Springfield, USA"
+}
+```
+
+**Order creation flow:**
+
+```
+1. Validate all products via Product Service (check they exist + pre-check stock)
+2. Atomic stock decrement for each item via Product Service
+   └── On any failure → rollback all previously decremented items and return 409
+3. Build order item list with prices and subtotals
+4. Create order record in DynamoDB
+   └── On failure → rollback all stock decrements
+5. Publish order event to SQS + SNS (non-blocking)
+```
+
+**Success response `201`:** Full order object with `order_id`, `status`, `items`, `total_amount`, timestamps.
+
+**Error responses:**
+
+| Status | Body | Cause |
+|--------|------|-------|
+| `401` | `{ "detail": "..." }` | Missing or invalid JWT |
+| `404` | `{ "detail": "Product X not found" }` | Product does not exist |
+| `409` | `{ "success": false, "message": "Insufficient stock available" }` | Not enough stock |
+| `500` | `{ "detail": "Order creation failed" }` | DynamoDB write failure (stock already rolled back) |
+| `502` | `{ "detail": "Failed to update product stock" }` | Product service error |
+| `503` | `{ "detail": "Product service unavailable" }` | Network / timeout |
+
+#### Low Stock Alert
+
+After a successful stock decrement, if the remaining stock falls below **5 units**, the product service publishes an SNS notification to `SNS_ALERTS_TOPIC_ARN` with the following message body:
+
+```
+LOW INVENTORY ALERT
+
+Product: Wireless Headphones
+Product ID: <uuid>
+Remaining Stock: 4
+```
+
+The notification reuses the existing `shopmesh-alerts` SNS topic — no new AWS infrastructure is required.
+
 # aws-terraform

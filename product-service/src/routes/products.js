@@ -113,4 +113,45 @@ router.post('/:id/upload-url', authMiddleware, async (req, res) => {
   }
 });
 
+// PATCH /api/products/:id/decrement-stock - atomic stock decrement (called by order-service)
+router.patch('/:id/decrement-stock', authMiddleware, async (req, res) => {
+  try {
+    const qty = parseInt(req.body.quantity, 10);
+    if (!qty || qty < 1) {
+      return res.status(400).json({ error: 'quantity must be a positive integer' });
+    }
+    const result = await productRepo.decrementStock(req.params.id, qty);
+    if (!result.success) {
+      return res.status(409).json({ success: false, message: 'Insufficient stock available' });
+    }
+    const updatedProduct = result.product;
+    console.log(`[PRODUCT] Stock decremented: ${req.params.id} → remaining: ${updatedProduct.stock}`);
+    if (typeof updatedProduct.stock === 'number' && updatedProduct.stock < 5) {
+      snsService.publishLowStockAlert(updatedProduct).catch((err) =>
+        console.error(`[PRODUCT] Low stock alert failed: ${err.message}`)
+      );
+    }
+    res.status(200).json({ success: true, product: updatedProduct });
+  } catch (err) {
+    console.error(`[PRODUCT] Decrement stock error: ${err.message}`);
+    res.status(500).json({ error: 'Failed to update stock' });
+  }
+});
+
+// PATCH /api/products/:id/restore-stock - restore stock for order rollback
+router.patch('/:id/restore-stock', authMiddleware, async (req, res) => {
+  try {
+    const qty = parseInt(req.body.quantity, 10);
+    if (!qty || qty < 1) {
+      return res.status(400).json({ error: 'quantity must be a positive integer' });
+    }
+    await productRepo.restoreStock(req.params.id, qty);
+    console.log(`[PRODUCT] Stock restored: ${req.params.id} +${qty}`);
+    res.status(200).json({ success: true });
+  } catch (err) {
+    console.error(`[PRODUCT] Restore stock error: ${err.message}`);
+    res.status(500).json({ error: 'Failed to restore stock' });
+  }
+});
+
 module.exports = router;

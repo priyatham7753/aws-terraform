@@ -41,7 +41,7 @@ const findById = async (userId) => {
 /**
  * Create a new user. Returns the user object without the password.
  */
-const createUser = async ({ name, email, password, role = 'user' }) => {
+const createUser = async ({ name, email, password, role = 'user', gender, age }) => {
   const salt = await bcrypt.genSalt(12);
   const passwordHash = await bcrypt.hash(password, salt);
   const now = new Date().toISOString();
@@ -53,6 +53,8 @@ const createUser = async ({ name, email, password, role = 'user' }) => {
     email: email.toLowerCase().trim(),
     passwordHash,
     role,
+    gender,
+    age: parseInt(age, 10),
     createdAt: now,
     updatedAt: now
   };

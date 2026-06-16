@@ -99,3 +99,41 @@ async def get_product_details(product_id: str) -> dict:
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Internal product fetch error"
         )
+
+
+async def decrement_product_stock(product_id: str, quantity: int, authorization: str) -> dict:
+    """Atomically decrement stock via Product Service. Raises 409 if insufficient."""
+    try:
+        async with httpx.AsyncClient(timeout=5.0) as client:
+            response = await client.patch(
+                f"{settings.product_service_url}/api/products/{product_id}/decrement-stock",
+                json={"quantity": quantity},
+                headers={"Authorization": authorization},
+            )
+        if response.status_code == 409:
+            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Insufficient stock available")
+        if response.status_code != 200:
+            raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail="Failed to update product stock")
+        return response.json()
+    except httpx.TimeoutException:
+        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Product service timeout during stock update")
+    except httpx.ConnectError:
+        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Product service unavailable")
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Stock decrement error for {product_id}: {e}")
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Internal stock update error")
+
+
+async def restore_product_stock(product_id: str, quantity: int, authorization: str) -> None:
+    """Restore stock via Product Service (used for rollback on order creation failure)."""
+    try:
+        async with httpx.AsyncClient(timeout=5.0) as client:
+            await client.patch(
+                f"{settings.product_service_url}/api/products/{product_id}/restore-stock",
+                json={"quantity": quantity},
+                headers={"Authorization": authorization},
+            )
+    except Exception as e:
+        logger.error(f"Stock restore error for {product_id}: {e}")

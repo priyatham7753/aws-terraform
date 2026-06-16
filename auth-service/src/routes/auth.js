@@ -16,7 +16,9 @@ router.post(
   [
     body('name').trim().isLength({ min: 2, max: 50 }).withMessage('Name must be 2-50 characters'),
     body('email').isEmail().normalizeEmail().withMessage('Valid email required'),
-    body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters')
+    body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
+    body('gender').isIn(['Male', 'Female', 'Other']).withMessage('Gender must be Male, Female, or Other'),
+    body('age').isInt({ min: 13, max: 100 }).withMessage('Age must be an integer between 13 and 100')
   ],
   async (req, res) => {
     const errors = validationResult(req);
@@ -24,14 +26,14 @@ router.post(
       return res.status(400).json({ errors: errors.array() });
     }
 
-    const { name, email, password } = req.body;
+    const { name, email, password, gender, age } = req.body;
     try {
       const existingUser = await userRepo.findByEmail(email);
       if (existingUser) {
         return res.status(409).json({ error: 'User with this email already exists' });
       }
 
-      const user = await userRepo.createUser({ name, email, password });
+      const user = await userRepo.createUser({ name, email, password, gender, age: parseInt(age, 10) });
 
       const token = jwt.sign(
         { userId: user.userId, email: user.email, role: user.role },

@@ -48,4 +48,17 @@ const publishProductDeleted = async (productId, productName) => {
   await publish(topicArn, 'ProductDeleted', { event: 'product.deleted', productId, productName });
 };
 
-module.exports = { publish, publishProductCreated, publishProductDeleted };
+const publishLowStockAlert = async (product) => {
+  const topicArn = process.env.SNS_ALERTS_TOPIC_ARN || '';
+  if (!topicArn && !LOCAL_MODE) return;
+  const message = `LOW INVENTORY ALERT\n\nProduct: ${product.name}\nProduct ID: ${product.productId}\nRemaining Stock: ${product.stock}`;
+  await publish(topicArn, 'LowStockAlert', {
+    event: 'product.low_stock',
+    message,
+    product_id: product.productId,
+    product_name: product.name,
+    remaining_stock: product.stock
+  });
+};
+
+module.exports = { publish, publishProductCreated, publishProductDeleted, publishLowStockAlert };

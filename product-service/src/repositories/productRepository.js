@@ -223,6 +223,46 @@ const seedProducts = async () => {
   }
 };
 
+const decrementStock = async (productId, quantity) => {
+  const qty = parseInt(quantity, 10);
+  try {
+    const result = await docClient.send(
+      new UpdateCommand({
+        TableName: PRODUCTS_TABLE,
+        Key: { productId },
+        UpdateExpression: 'SET stock = stock - :qty, updatedAt = :now',
+        ConditionExpression: 'attribute_exists(productId) AND stock >= :qty',
+        ExpressionAttributeValues: {
+          ':qty': qty,
+          ':now': new Date().toISOString()
+        },
+        ReturnValues: 'ALL_NEW'
+      })
+    );
+    return { success: true, product: result.Attributes };
+  } catch (err) {
+    if (err.name === 'ConditionalCheckFailedException') {
+      return { success: false, reason: 'insufficient_stock' };
+    }
+    throw err;
+  }
+};
+
+const restoreStock = async (productId, quantity) => {
+  const qty = parseInt(quantity, 10);
+  await docClient.send(
+    new UpdateCommand({
+      TableName: PRODUCTS_TABLE,
+      Key: { productId },
+      UpdateExpression: 'SET stock = stock + :qty, updatedAt = :now',
+      ExpressionAttributeValues: {
+        ':qty': qty,
+        ':now': new Date().toISOString()
+      }
+    })
+  );
+};
+
 module.exports = {
   listProducts,
   getProductById,
@@ -231,5 +271,7 @@ module.exports = {
   softDeleteProduct,
   countActiveProducts,
   seedProducts,
+  decrementStock,
+  restoreStock,
   VALID_CATEGORIES
 };
