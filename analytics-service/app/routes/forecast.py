@@ -15,8 +15,10 @@ logger = logging.getLogger(__name__)
 
 def _call_bedrock(prompt: str):
     if not bedrock_client:
+        logger.warning("[BEDROCK-FORECAST] bedrock_client is None — skipping (LOCAL_MODE?)")
         return None
     try:
+        logger.info(f"[BEDROCK-FORECAST] Invoking {settings.bedrock_model_id} ...")
         body = json.dumps({
             "messages": [{"role": "user", "content": [{"text": prompt}]}],
             "inferenceConfig": {"max_new_tokens": 300, "temperature": 0.3}
@@ -27,9 +29,11 @@ def _call_bedrock(prompt: str):
             contentType="application/json"
         )
         result = json.loads(response["body"].read())
-        return result["output"]["message"]["content"][0]["text"]
+        text = result["output"]["message"]["content"][0]["text"]
+        logger.info(f"[BEDROCK-FORECAST] Success — {len(text)} chars returned")
+        return text
     except Exception as e:
-        logger.error(f"Bedrock call failed: {e}")
+        logger.error(f"[BEDROCK-FORECAST] FAILED — {type(e).__name__}: {e}", exc_info=True)
         return None
 
 
