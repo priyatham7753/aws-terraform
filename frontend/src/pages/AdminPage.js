@@ -41,7 +41,7 @@ const AIBox = ({ text, bedrockEnabled }) => (
     <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
       <span style={{ fontSize: '1.1rem' }}>🤖</span>
       <span style={{ fontWeight: 700, fontSize: '0.875rem', color: '#4338ca' }}>
-        {bedrockEnabled ? 'AI Analysis — Amazon Bedrock (Claude)' : 'Analysis Summary'}
+        {bedrockEnabled ? 'AI Analysis — Amazon Bedrock (Nova Lite)' : 'Analysis Summary'}
       </span>
     </div>
     <p style={{ margin: 0, color: '#1e1b4b', lineHeight: 1.65, fontSize: '0.9rem' }}>{text}</p>
@@ -71,7 +71,7 @@ const Skeleton = () => (
   </div>
 );
 
-// ────────────────────────────────────────────────────────────────────────────
+// ────────────────────────────────────────────────────────────────────────────---
 // FORECAST TAB
 // ────────────────────────────────────────────────────────────────────────────
 const ForecastTab = ({ data, loading, error, onRefresh }) => {
