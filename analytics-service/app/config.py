@@ -16,7 +16,7 @@ class Settings(BaseSettings):
     auth_service_url: str = "http://auth-service:3001"
 
     # Bedrock
-    bedrock_model_id: str = "anthropic.claude-haiku-4-5-20251001"
+    bedrock_model_id: str = "amazon.nova-lite-v1:0"
 
     class Config:
         env_file = ".env"

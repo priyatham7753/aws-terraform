@@ -115,9 +115,17 @@ resource "aws_security_group" "backend" {
   }
 
   ingress {
+    description     = "Analytics Service from internal ALB"
+    from_port       = 3004
+    to_port         = 3004
+    protocol        = "tcp"
+    security_groups = [aws_security_group.internal_alb.id]
+  }
+
+  ingress {
     description = "Inter-service communication"
     from_port   = 3001
-    to_port     = 3003
+    to_port     = 3004
     protocol    = "tcp"
     self        = true
   }

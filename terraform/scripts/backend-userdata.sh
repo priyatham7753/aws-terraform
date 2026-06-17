@@ -12,6 +12,7 @@ AWS_REGION="${aws_region}"
 AUTH_ECR_URL="${auth_ecr_url}"
 PRODUCT_ECR_URL="${product_ecr_url}"
 ORDER_ECR_URL="${order_ecr_url}"
+ANALYTICS_ECR_URL="${analytics_ecr_url}"
 IMAGE_TAG="${docker_image_tag}"
 DYNAMODB_USERS_TABLE="${dynamodb_users_table}"
 DYNAMODB_PRODUCTS_TABLE="${dynamodb_products_table}"
@@ -97,6 +98,7 @@ aws ecr get-login-password --region "$AWS_REGION" | \
 AUTH_IMAGE="$AUTH_ECR_URL:$IMAGE_TAG"
 PRODUCT_IMAGE="$PRODUCT_ECR_URL:$IMAGE_TAG"
 ORDER_IMAGE="$ORDER_ECR_URL:$IMAGE_TAG"
+ANALYTICS_IMAGE="$ANALYTICS_ECR_URL:$IMAGE_TAG"
 
 # ─── 7. Write backend docker-compose.yml ──────────────────────────────────
 cat > /opt/shopmesh/backend/docker-compose.yml <<EOF
@@ -174,12 +176,37 @@ services:
       timeout: 10s
       retries: 5
       start_period: 60s
+
+  analytics-service:
+    image: $ANALYTICS_IMAGE
+    container_name: shopmesh-analytics
+    restart: always
+    ports:
+      - "3004:3004"
+    environment:
+      - PORT=3004
+      - LOCAL_MODE=false
+      - AWS_REGION=$AWS_REGION
+      - DYNAMODB_USERS_TABLE=$DYNAMODB_USERS_TABLE
+      - DYNAMODB_PRODUCTS_TABLE=$DYNAMODB_PRODUCTS_TABLE
+      - DYNAMODB_ORDERS_TABLE=$DYNAMODB_ORDERS_TABLE
+      - AUTH_SERVICE_URL=http://auth-service:3001
+    depends_on:
+      auth-service:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:3004/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
 EOF
 
 # ─── 8. Pull images explicitly then start backend services ───────────────
 docker pull "$AUTH_IMAGE"
 docker pull "$PRODUCT_IMAGE"
 docker pull "$ORDER_IMAGE"
+docker pull "$ANALYTICS_IMAGE"
 
 
 echo "Listing downloaded Docker images..."
@@ -212,4 +239,4 @@ systemctl daemon-reload
 systemctl enable shopmesh-backend
 
 echo "=== ShopMesh Backend Bootstrap DONE $(date) ==="
-echo "Services: auth=3001, products=3002, orders=3003"
+echo "Services: auth=3001, products=3002, orders=3003, analytics=3004"

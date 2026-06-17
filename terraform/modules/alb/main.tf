@@ -209,3 +209,40 @@ resource "aws_lb_listener_rule" "order" {
     }
   }
 }
+
+# Analytics Service Target Group
+resource "aws_lb_target_group" "analytics" {
+  name     = "${var.project_name}-analytics-tg"
+  port     = 3004
+  protocol = "HTTP"
+  vpc_id   = var.vpc_id
+
+  health_check {
+    enabled             = true
+    path                = "/health"
+    port                = "3004"
+    healthy_threshold   = 2
+    unhealthy_threshold = 5
+    timeout             = 10
+    interval            = 30
+    matcher             = "200"
+  }
+
+  tags = { Name = "${var.project_name}-analytics-tg" }
+}
+
+resource "aws_lb_listener_rule" "analytics" {
+  listener_arn = aws_lb_listener.internal_http.arn
+  priority     = 40
+
+  action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.analytics.arn
+  }
+
+  condition {
+    path_pattern {
+      values = ["/api/analytics", "/api/analytics/*"]
+    }
+  }
+}

@@ -177,7 +177,8 @@ resource "aws_iam_role_policy" "backend_bedrock" {
         "bedrock:InvokeModelWithResponseStream"
       ]
       Resource = [
-        "arn:aws:bedrock:${var.aws_region}::foundation-model/anthropic.claude-haiku-4-5-20251001",
+        "arn:aws:bedrock:${var.aws_region}::foundation-model/amazon.nova-lite-v1:0",
+        "arn:aws:bedrock:${var.aws_region}::foundation-model/amazon.nova-*",
         "arn:aws:bedrock:${var.aws_region}::foundation-model/anthropic.claude-*"
       ]
     }]

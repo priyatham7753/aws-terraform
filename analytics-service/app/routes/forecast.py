@@ -18,9 +18,8 @@ def _call_bedrock(prompt: str):
         return None
     try:
         body = json.dumps({
-            "anthropic_version": "bedrock-2023-05-31",
-            "max_tokens": 300,
-            "messages": [{"role": "user", "content": prompt}]
+            "messages": [{"role": "user", "content": [{"text": prompt}]}],
+            "inferenceConfig": {"max_new_tokens": 300, "temperature": 0.3}
         })
         response = bedrock_client.invoke_model(
             modelId=settings.bedrock_model_id,
@@ -28,7 +27,7 @@ def _call_bedrock(prompt: str):
             contentType="application/json"
         )
         result = json.loads(response["body"].read())
-        return result["content"][0]["text"]
+        return result["output"]["message"]["content"][0]["text"]
     except Exception as e:
         logger.error(f"Bedrock call failed: {e}")
         return None

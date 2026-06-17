@@ -63,7 +63,8 @@ resource "aws_autoscaling_group" "backend" {
   target_group_arns = [
     var.auth_target_group_arn,
     var.product_target_group_arn,
-    var.order_target_group_arn
+    var.order_target_group_arn,
+    var.analytics_target_group_arn
   ]
   health_check_type         = "ELB"
   health_check_grace_period = 360
