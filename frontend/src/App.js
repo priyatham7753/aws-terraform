@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
 import Navbar from './components/Navbar';
+import ChatWidget from './components/ChatWidget';
 import AuthPage from './pages/AuthPage';
 import ProductsPage from './pages/ProductsPage';
 import OrdersPage from './pages/OrdersPage';
@@ -46,11 +47,12 @@ const PublicRoute = ({ children }) => {
   return children;
 };
 
-// App layout with Navbar
+// App layout with Navbar and AI Assistant
 const AppLayout = ({ children }) => (
   <div className="app-wrapper">
     <Navbar />
     {children}
+    <ChatWidget />
   </div>
 );
 

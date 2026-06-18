@@ -11,6 +11,7 @@ services:
         - REACT_APP_ORDER_SERVICE_URL=http://localhost:3003/api/orders
         # Leave REACT_APP_INTERNAL_ALB_URL empty for local dev
         - REACT_APP_INTERNAL_ALB_URL=
+        - REACT_APP_AI_ASSISTANT_URL=http://localhost:3005/api/assistant
     container_name: shopmesh-frontend
     restart: unless-stopped
     ports:

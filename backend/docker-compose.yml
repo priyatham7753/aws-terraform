@@ -190,7 +190,7 @@ services:
       - AUTH_SERVICE_URL=http://auth-service:3001
       - AWS_REGION=us-east-1
       # In production set LOCAL_MODE=false and ensure EC2 IAM role has bedrock:InvokeModel
-      - BEDROCK_MODEL_ID=anthropic.claude-haiku-4-5-20251001
+      - BEDROCK_MODEL_ID=amazon.nova-lite-v1:0
     depends_on:
       dynamodb-init:
         condition: service_completed_successfully
@@ -200,6 +200,40 @@ services:
       - shopmesh-backend
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:3004/health')"]
+      interval: 20s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  # ─── AI Assistant Service ─────────────────────────────────────────────────
+  ai-assistant-service:
+    build:
+      context: ./ai-assistant-service
+      dockerfile: Dockerfile
+    container_name: shopmesh-ai-assistant
+    restart: unless-stopped
+    ports:
+      - "3005:3005"
+    environment:
+      - PORT=3005
+      - LOCAL_MODE=true
+      - AUTH_SERVICE_URL=http://auth-service:3001
+      - PRODUCT_SERVICE_URL=http://product-service:3002
+      - ORDER_SERVICE_URL=http://order-service:3003
+      - AWS_REGION=us-east-1
+      # In production set LOCAL_MODE=false and ensure EC2 IAM role has bedrock:InvokeModel and bedrock:Converse
+      - BEDROCK_MODEL_ID=amazon.nova-lite-v1:0
+    depends_on:
+      auth-service:
+        condition: service_healthy
+      product-service:
+        condition: service_healthy
+      order-service:
+        condition: service_healthy
+    networks:
+      - shopmesh-backend
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:3005/health')"]
       interval: 20s
       timeout: 10s
       retries: 5

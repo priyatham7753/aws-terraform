@@ -24,6 +24,10 @@ const ANALYTICS_URL = INTERNAL_ALB
   ? `${INTERNAL_ALB}/api/analytics`
   : (process.env.REACT_APP_ANALYTICS_SERVICE_URL || '/api/analytics');
 
+const AI_ASSISTANT_URL = INTERNAL_ALB
+  ? `${INTERNAL_ALB}/api/assistant`
+  : (process.env.REACT_APP_AI_ASSISTANT_URL || 'http://localhost:3005/api/assistant');
+
 // Helper: get auth headers
 const authHeader = () => {
   const token = localStorage.getItem('token');
@@ -63,4 +67,9 @@ export const analyticsAPI = {
     axios.get(`${ANALYTICS_URL}/inventory-forecast`, { headers: authHeader() }),
   getDemographics: () =>
     axios.get(`${ANALYTICS_URL}/demographics`, { headers: authHeader() }),
+};
+
+// ─── AI Assistant API ─────────────────────────────────────────────────────
+export const assistantAPI = {
+  chat: (data) => axios.post(`${AI_ASSISTANT_URL}/chat`, data, { headers: authHeader() }),
 };
