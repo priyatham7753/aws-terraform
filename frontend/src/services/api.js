@@ -26,7 +26,7 @@ const ANALYTICS_URL = INTERNAL_ALB
 
 const AI_ASSISTANT_URL = INTERNAL_ALB
   ? `${INTERNAL_ALB}/api/assistant`
-  : (process.env.REACT_APP_AI_ASSISTANT_URL || 'http://localhost:3005/api/assistant');
+  : (process.env.REACT_APP_AI_ASSISTANT_URL || '/api/assistant');
 
 // Helper: get auth headers
 const authHeader = () => {

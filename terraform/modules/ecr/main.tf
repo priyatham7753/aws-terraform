@@ -105,3 +105,21 @@ resource "aws_ecr_lifecycle_policy" "analytics_service" {
   repository = aws_ecr_repository.analytics_service.name
   policy     = local.lifecycle_policy
 }
+
+resource "aws_ecr_repository" "ai_assistant_service" {
+  name                 = "${var.project_name}/ai-assistant-service"
+  image_tag_mutability = "MUTABLE"
+
+  image_scanning_configuration {
+    scan_on_push = true
+  }
+
+  tags = {
+    Name = "${var.project_name}-ai-assistant-service-ecr"
+  }
+}
+
+resource "aws_ecr_lifecycle_policy" "ai_assistant_service" {
+  repository = aws_ecr_repository.ai_assistant_service.name
+  policy     = local.lifecycle_policy
+}

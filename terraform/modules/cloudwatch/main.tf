@@ -186,3 +186,13 @@ resource "aws_cloudwatch_log_group" "order_service" {
   name              = "/shopmesh/order-service"
   retention_in_days = 30
 }
+
+resource "aws_cloudwatch_log_group" "analytics_service" {
+  name              = "/shopmesh/analytics-service"
+  retention_in_days = 30
+}
+
+resource "aws_cloudwatch_log_group" "ai_assistant_service" {
+  name              = "/shopmesh/ai-assistant-service"
+  retention_in_days = 30
+}

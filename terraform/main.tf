@@ -204,6 +204,7 @@ module "launch_template" {
     product_ecr_url          = module.ecr.product_repository_url
     order_ecr_url            = module.ecr.order_repository_url
     analytics_ecr_url        = module.ecr.analytics_repository_url
+    ai_assistant_ecr_url     = module.ecr.ai_assistant_repository_url
     docker_image_tag         = var.docker_image_tag
     dynamodb_users_table     = "${local.project_name}-users"
     dynamodb_products_table  = "${local.project_name}-products"
@@ -233,6 +234,7 @@ module "asg" {
   product_target_group_arn         = module.alb.product_target_group_arn
   order_target_group_arn           = module.alb.order_target_group_arn
   analytics_target_group_arn       = module.alb.analytics_target_group_arn
+  ai_assistant_target_group_arn    = module.alb.ai_assistant_target_group_arn
   internal_alb_arn_suffix          = module.alb.internal_alb_arn_suffix
   auth_tg_arn_suffix               = module.alb.auth_target_group_arn_suffix
   frontend_min_size                = var.frontend_asg_min

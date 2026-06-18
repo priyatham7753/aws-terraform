@@ -46,6 +46,10 @@ variable "analytics_target_group_arn" {
   type = string
 }
 
+variable "ai_assistant_target_group_arn" {
+  type = string
+}
+
 variable "internal_alb_arn_suffix" {
   type    = string
   default = ""

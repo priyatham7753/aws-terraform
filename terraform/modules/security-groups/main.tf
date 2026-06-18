@@ -123,9 +123,17 @@ resource "aws_security_group" "backend" {
   }
 
   ingress {
+    description     = "AI Assistant Service from internal ALB"
+    from_port       = 3005
+    to_port         = 3005
+    protocol        = "tcp"
+    security_groups = [aws_security_group.internal_alb.id]
+  }
+
+  ingress {
     description = "Inter-service communication"
     from_port   = 3001
-    to_port     = 3004
+    to_port     = 3005
     protocol    = "tcp"
     self        = true
   }

@@ -246,3 +246,40 @@ resource "aws_lb_listener_rule" "analytics" {
     }
   }
 }
+
+# AI Assistant Service Target Group
+resource "aws_lb_target_group" "ai_assistant" {
+  name     = "${var.project_name}-ai-assistant-tg"
+  port     = 3005
+  protocol = "HTTP"
+  vpc_id   = var.vpc_id
+
+  health_check {
+    enabled             = true
+    path                = "/health"
+    port                = "3005"
+    healthy_threshold   = 2
+    unhealthy_threshold = 5
+    timeout             = 10
+    interval            = 30
+    matcher             = "200"
+  }
+
+  tags = { Name = "${var.project_name}-ai-assistant-tg" }
+}
+
+resource "aws_lb_listener_rule" "ai_assistant" {
+  listener_arn = aws_lb_listener.internal_http.arn
+  priority     = 50
+
+  action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.ai_assistant.arn
+  }
+
+  condition {
+    path_pattern {
+      values = ["/api/assistant", "/api/assistant/*"]
+    }
+  }
+}

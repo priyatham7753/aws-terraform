@@ -22,3 +22,8 @@ output "analytics_repository_url" {
   description = "ECR repository URL for the analytics-service image"
   value       = aws_ecr_repository.analytics_service.repository_url
 }
+
+output "ai_assistant_repository_url" {
+  description = "ECR repository URL for the ai-assistant-service image"
+  value       = aws_ecr_repository.ai_assistant_service.repository_url
+}
