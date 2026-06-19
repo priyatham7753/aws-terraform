@@ -41,14 +41,11 @@ resource "aws_lb_listener" "external_http" {
   port              = 80
   protocol          = "HTTP"
 
-  # Permanently redirect HTTP to HTTPS — no downtime, ALB handles in-flight requests
+  # Forward to frontend — CloudFront connects here over HTTP (http-only origin policy).
+  # CloudFront enforces HTTPS at the viewer edge; this leg stays within AWS private network.
   default_action {
-    type = "redirect"
-    redirect {
-      port        = "443"
-      protocol    = "HTTPS"
-      status_code = "HTTP_301"
-    }
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.frontend.arn
   }
 }
 
