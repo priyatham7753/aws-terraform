@@ -7,13 +7,14 @@ export const CartProvider = ({ children }) => {
 
   const addToCart = useCallback((product) => {
     const id = product.productId || product._id;
+    const incomingQty = (product.quantity && product.quantity > 0) ? product.quantity : 1;
     const normalized = { ...product, _id: id };
     setItems(prev => {
       const existing = prev.find(i => i._id === id);
       if (existing) {
-        return prev.map(i => i._id === id ? { ...i, quantity: i.quantity + 1 } : i);
+        return prev.map(i => i._id === id ? { ...i, quantity: i.quantity + incomingQty } : i);
       }
-      return [...prev, { ...normalized, quantity: 1 }];
+      return [...prev, { ...normalized, quantity: incomingQty }];
     });
   }, []);
 
