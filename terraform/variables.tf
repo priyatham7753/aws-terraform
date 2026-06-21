@@ -123,3 +123,34 @@ variable "create_www_record" {
   type        = bool
   default     = true
 }
+
+# ─── EKS ──────────────────────────────────────────────────────────────────
+variable "eks_cluster_version" {
+  description = "Kubernetes version for the EKS cluster"
+  type        = string
+  default     = "1.30"
+}
+
+variable "eks_node_instance_type" {
+  description = "EC2 instance types for EKS managed node group"
+  type        = list(string)
+  default     = ["t3.medium"]
+}
+
+variable "eks_node_min_size" {
+  description = "Minimum number of EKS worker nodes"
+  type        = number
+  default     = 2
+}
+
+variable "eks_node_desired_size" {
+  description = "Desired number of EKS worker nodes"
+  type        = number
+  default     = 3
+}
+
+variable "eks_node_max_size" {
+  description = "Maximum number of EKS worker nodes"
+  type        = number
+  default     = 6
+}

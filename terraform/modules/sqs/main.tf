@@ -29,8 +29,8 @@ resource "aws_sqs_queue_policy" "order_processing" {
     Version = "2012-10-17"
     Statement = [{
       Effect    = "Allow"
-      Principal = { AWS = var.backend_role_arn }
-      Action    = ["sqs:SendMessage", "sqs:ReceiveMessage", "sqs:DeleteMessage", "sqs:GetQueueAttributes"]
+      Principal = { AWS = concat([var.backend_role_arn], var.additional_role_arns) }
+      Action    = ["sqs:SendMessage", "sqs:ReceiveMessage", "sqs:DeleteMessage", "sqs:GetQueueAttributes", "sqs:GetQueueUrl", "sqs:ChangeMessageVisibility"]
       Resource  = aws_sqs_queue.order_processing.arn
     }]
   })

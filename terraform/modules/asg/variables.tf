@@ -27,7 +27,8 @@ variable "backend_launch_template_version" {
 }
 
 variable "frontend_target_group_arn" {
-  type = string
+  type    = string
+  default = ""
 }
 
 variable "auth_target_group_arn" {

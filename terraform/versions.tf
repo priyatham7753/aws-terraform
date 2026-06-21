@@ -6,10 +6,14 @@ terraform {
       source  = "hashicorp/aws"
       version = "6.44.0"
     }
+    tls = {
+      source  = "hashicorp/tls"
+      version = "~> 4.0"
+    }
   }
 
   backend "s3" {
-    bucket         = "shopmesh-terraform-state-686591366739"
+    bucket         = "shopmesh-terraform-state-242969680553"
     key            = "shopmesh/terraform.tfstate"
     region         = "us-east-1"
     dynamodb_table = "shopmesh-terraform-locks"

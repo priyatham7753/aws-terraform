@@ -5,7 +5,7 @@ resource "aws_autoscaling_group" "frontend" {
   max_size                  = var.frontend_max_size
   desired_capacity          = var.frontend_desired_capacity
   vpc_zone_identifier       = var.public_subnet_ids
-  target_group_arns         = [var.frontend_target_group_arn]
+  target_group_arns         = var.frontend_target_group_arn != "" ? [var.frontend_target_group_arn] : []
   health_check_type         = "ELB"
   health_check_grace_period = 300
 

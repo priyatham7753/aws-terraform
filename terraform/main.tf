@@ -2,6 +2,10 @@ locals {
   project_name = var.project_name
   aws_region   = var.aws_region
   environment  = var.environment
+  account_id   = "242969680553"
+
+  # Computed ARNs for breaking circular dependencies (sqs↔irsa)
+  sqs_order_queue_arn = "arn:aws:sqs:${var.aws_region}:242969680553:${var.project_name}-order-processing"
 }
 
 # ─── ACM Certificates ─────────────────────────────────────────────────────
@@ -151,15 +155,79 @@ module "sns" {
 
 # ─── SQS ──────────────────────────────────────────────────────────────────
 module "sqs" {
-  source           = "./modules/sqs"
-  project_name     = local.project_name
-  backend_role_arn = module.iam.backend_ec2_role_arn
+  source               = "./modules/sqs"
+  project_name         = local.project_name
+  backend_role_arn     = module.iam.backend_ec2_role_arn
+  additional_role_arns = [module.irsa.order_service_role_arn]
 }
 
 # ─── ECR ──────────────────────────────────────────────────────────────────
 module "ecr" {
   source       = "./modules/ecr"
   project_name = local.project_name
+}
+
+# ─── EKS ──────────────────────────────────────────────────────────────────
+module "eks" {
+  source             = "./modules/eks"
+  project_name       = local.project_name
+  aws_region         = local.aws_region
+  vpc_id             = module.vpc.vpc_id
+  private_subnet_ids = module.vpc.private_subnet_ids
+  public_subnet_ids  = module.vpc.public_subnet_ids
+  cluster_version    = var.eks_cluster_version
+  node_instance_type = var.eks_node_instance_type
+  node_min_size      = var.eks_node_min_size
+  node_desired_size  = var.eks_node_desired_size
+  node_max_size      = var.eks_node_max_size
+  node_disk_size     = 50
+
+  depends_on = [module.vpc]
+}
+
+# ─── IRSA ─────────────────────────────────────────────────────────────────
+module "irsa" {
+  source       = "./modules/irsa"
+  project_name = local.project_name
+  aws_region   = local.aws_region
+  account_id   = "242969680553"
+
+  oidc_provider_arn = module.eks.oidc_provider_arn
+  oidc_issuer_url   = module.eks.cluster_oidc_issuer_url
+
+  dynamodb_users_table_arn     = "arn:aws:dynamodb:${local.aws_region}:242969680553:table/${local.project_name}-users"
+  dynamodb_products_table_arn  = "arn:aws:dynamodb:${local.aws_region}:242969680553:table/${local.project_name}-products"
+  dynamodb_orders_table_arn    = "arn:aws:dynamodb:${local.aws_region}:242969680553:table/${local.project_name}-orders"
+  s3_product_images_bucket_arn = module.s3.product_images_bucket_arn
+  sns_orders_topic_arn         = module.sns.orders_topic_arn
+  sns_alerts_topic_arn         = module.sns.alerts_topic_arn
+  sqs_order_queue_arn          = local.sqs_order_queue_arn
+  jwt_secret_arn               = module.secretsmanager.jwt_secret_arn
+
+  depends_on = [module.eks]
+}
+
+# ─── CloudWatch Observability Add-on ─────────────────────────────────────
+# Declared here (not inside module "eks") so we can reference module.irsa.cloudwatch_agent_role_arn
+# without creating a circular dependency between the eks and irsa modules.
+resource "aws_eks_addon" "cloudwatch_observability" {
+  cluster_name                = module.eks.cluster_name
+  addon_name                  = "amazon-cloudwatch-observability"
+  service_account_role_arn    = module.irsa.cloudwatch_agent_role_arn
+  resolve_conflicts_on_create = "OVERWRITE"
+  resolve_conflicts_on_update = "OVERWRITE"
+
+  depends_on = [module.eks, module.irsa]
+}
+
+resource "aws_eks_addon" "ebs_csi" {
+  cluster_name                = module.eks.cluster_name
+  addon_name                  = "aws-ebs-csi-driver"
+  service_account_role_arn    = module.irsa.ebs_csi_role_arn
+  resolve_conflicts_on_create = "OVERWRITE"
+  resolve_conflicts_on_update = "OVERWRITE"
+
+  depends_on = [module.eks, module.irsa]
 }
 
 # ─── ALB ──────────────────────────────────────────────────────────────────
@@ -229,7 +297,7 @@ module "asg" {
   frontend_launch_template_version = tostring(module.launch_template.frontend_launch_template_version)
   backend_launch_template_id       = module.launch_template.backend_launch_template_id
   backend_launch_template_version  = tostring(module.launch_template.backend_launch_template_version)
-  frontend_target_group_arn        = module.alb.frontend_target_group_arn
+  frontend_target_group_arn        = ""
   auth_target_group_arn            = module.alb.auth_target_group_arn
   product_target_group_arn         = module.alb.product_target_group_arn
   order_target_group_arn           = module.alb.order_target_group_arn
@@ -245,61 +313,61 @@ module "asg" {
   backend_max_size                 = var.backend_asg_max
 }
 
-# ─── CloudFront ───────────────────────────────────────────────────────────
-module "cloudfront" {
-  source                 = "./modules/cloudfront"
-  project_name           = local.project_name
-  external_alb_dns_name  = module.alb.external_alb_dns_name
-  cloudfront_logs_bucket = module.s3.cloudfront_logs_bucket_name
-  price_class            = var.cloudfront_price_class
-  certificate_arn        = aws_acm_certificate_validation.cloudfront.certificate_arn
-  domain_name            = var.domain_name
-}
+# # ─── CloudFront ───────────────────────────────────────────────────────────
+# module "cloudfront" {
+#   source                 = "./modules/cloudfront"
+#   project_name           = local.project_name
+#   external_alb_dns_name  = module.alb.external_alb_dns_name
+#   cloudfront_logs_bucket = module.s3.cloudfront_logs_bucket_name
+#   price_class            = var.cloudfront_price_class
+#   certificate_arn        = aws_acm_certificate_validation.cloudfront.certificate_arn
+#   domain_name            = var.domain_name
+# }
 
 # ─── Route53 A Records (CloudFront alias) ─────────────────────────────────
 # Created after both module.route53 (zone) and module.cloudfront (distribution)
 # are ready. This avoids the circular dependency that would occur if these
 # records lived inside the route53 module.
 
-resource "aws_route53_record" "cloudfront_alias" {
-  zone_id = module.route53.zone_id
-  name    = var.domain_name
-  type    = "A"
+# resource "aws_route53_record" "cloudfront_alias" {
+#   zone_id = module.route53.zone_id
+#   name    = var.domain_name
+#   type    = "A"
 
-  alias {
-    name                   = module.cloudfront.cloudfront_domain_name
-    zone_id                = "Z2FDTNDATAQYW2" # CloudFront hosted zone ID (fixed AWS constant)
-    evaluate_target_health = false
-  }
-}
+#   alias {
+#     name                   = module.cloudfront.cloudfront_domain_name
+#     zone_id                = "Z2FDTNDATAQYW2" # CloudFront hosted zone ID (fixed AWS constant)
+#     evaluate_target_health = false
+#   }
+# }
 
-resource "aws_route53_record" "www_alias" {
-  count   = var.create_www_record ? 1 : 0
-  zone_id = module.route53.zone_id
-  name    = "www.${var.domain_name}"
-  type    = "A"
+# resource "aws_route53_record" "www_alias" {
+#   count   = var.create_www_record ? 1 : 0
+#   zone_id = module.route53.zone_id
+#   name    = "www.${var.domain_name}"
+#   type    = "A"
 
-  alias {
-    name                   = module.cloudfront.cloudfront_domain_name
-    zone_id                = "Z2FDTNDATAQYW2"
-    evaluate_target_health = false
-  }
-}
+#   alias {
+#     name                   = module.cloudfront.cloudfront_domain_name
+#     zone_id                = "Z2FDTNDATAQYW2"
+#     evaluate_target_health = false
+#   }
+# }
 
-# ─── CloudWatch ───────────────────────────────────────────────────────────
-module "cloudwatch" {
-  source                  = "./modules/cloudwatch"
-  project_name            = local.project_name
-  alerts_topic_arn        = module.sns.alerts_topic_arn
-  frontend_asg_name       = module.asg.frontend_asg_name
-  backend_asg_name        = module.asg.backend_asg_name
-  external_alb_arn_suffix = module.alb.external_alb_arn
-  internal_alb_arn_suffix = module.alb.internal_alb_arn
-  auth_tg_arn_suffix      = module.alb.auth_target_group_arn
-  sqs_queue_name          = "${local.project_name}-order-processing"
+# # ─── CloudWatch ───────────────────────────────────────────────────────────
+# module "cloudwatch" {
+#   source                  = "./modules/cloudwatch"
+#   project_name            = local.project_name
+#   alerts_topic_arn        = module.sns.alerts_topic_arn
+#   frontend_asg_name       = module.asg.frontend_asg_name
+#   backend_asg_name        = module.asg.backend_asg_name
+#   external_alb_arn_suffix = module.alb.external_alb_arn
+#   internal_alb_arn_suffix = module.alb.internal_alb_arn
+#   auth_tg_arn_suffix      = module.alb.auth_target_group_arn
+#   sqs_queue_name          = "${local.project_name}-order-processing"
 
-  depends_on = [module.asg, module.alb, module.sqs]
-}
+#   depends_on = [module.asg, module.alb, module.sqs]
+# }
 
 # ─── EventBridge ──────────────────────────────────────────────────────────
 module "eventbridge" {
