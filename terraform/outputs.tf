@@ -20,11 +20,6 @@ output "external_alb_dns_name" {
   value       = module.alb.external_alb_dns_name
 }
 
-output "internal_alb_dns_name" {
-  description = "Internal ALB DNS name (backend routing)"
-  value       = module.alb.internal_alb_dns_name
-}
-
 # # ─── CloudFront ───────────────────────────────────────────────────────────
 # output "cloudfront_domain_name" {
 #   description = "CloudFront distribution domain — use this URL to access the application"
@@ -85,12 +80,6 @@ output "product_images_bucket" {
   description = "S3 product images bucket name"
   value       = module.s3.product_images_bucket_name
 }
-
-# ─── CloudWatch ───────────────────────────────────────────────────────────
-# output "cloudwatch_dashboard_name" {
-#   description = "CloudWatch dashboard name"
-#   value       = module.cloudwatch.dashboard_name
-# }
 
 # ─── Route53 ──────────────────────────────────────────────────────────────
 output "route53_zone_id" {

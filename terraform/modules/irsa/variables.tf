@@ -12,4 +12,3 @@ variable "s3_product_images_bucket_arn" { type = string }
 variable "sns_orders_topic_arn" { type = string }
 variable "sns_alerts_topic_arn" { type = string }
 variable "sqs_order_queue_arn" { type = string }
-variable "jwt_secret_arn" { type = string }

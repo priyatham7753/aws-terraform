@@ -1,14 +1,5 @@
 output "external_alb_dns_name" { value = aws_lb.external.dns_name }
 output "external_alb_arn" { value = aws_lb.external.arn }
-output "internal_alb_dns_name" { value = aws_lb.internal.dns_name }
-output "internal_alb_arn" { value = aws_lb.internal.arn }
-output "internal_alb_arn_suffix" { value = aws_lb.internal.arn_suffix }
+output "external_alb_arn_suffix" { value = aws_lb.external.arn_suffix }
 output "frontend_target_group_arn" { value = aws_lb_target_group.frontend.arn }
-output "auth_target_group_arn" { value = aws_lb_target_group.auth.arn }
-output "auth_target_group_arn_suffix" { value = aws_lb_target_group.auth.arn_suffix }
-output "product_target_group_arn" { value = aws_lb_target_group.product.arn }
-output "order_target_group_arn" { value = aws_lb_target_group.order.arn }
-output "analytics_target_group_arn" { value = aws_lb_target_group.analytics.arn }
-output "ai_assistant_target_group_arn" { value = aws_lb_target_group.ai_assistant.arn }
-output "internal_listener_arn" { value = aws_lb_listener.internal_http.arn }
 output "external_https_listener_arn" { value = aws_lb_listener.external_https.arn }

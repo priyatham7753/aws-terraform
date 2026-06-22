@@ -41,69 +41,11 @@ variable "availability_zones" {
   default     = ["us-east-1a", "us-east-1b"]
 }
 
-# ─── EC2 ──────────────────────────────────────────────────────────────────
-variable "frontend_instance_type" {
-  description = "EC2 instance type for frontend ASG"
-  type        = string
-  default     = "t3.small"
-}
-
-variable "backend_instance_type" {
-  description = "EC2 instance type for backend ASG"
-  type        = string
-  default     = "t3.medium"
-}
-
-variable "ec2_key_pair_name" {
-  description = "EC2 key pair name for SSH access (leave empty to disable)"
-  type        = string
-  default     = ""
-}
-
-
-# ─── ASG ──────────────────────────────────────────────────────────────────
-variable "frontend_asg_min" {
-  type    = number
-  default = 1
-}
-
-variable "frontend_asg_desired" {
-  type    = number
-  default = 2
-}
-
-variable "frontend_asg_max" {
-  type    = number
-  default = 4
-}
-
-variable "backend_asg_min" {
-  type    = number
-  default = 1
-}
-
-variable "backend_asg_desired" {
-  type    = number
-  default = 2
-}
-
-variable "backend_asg_max" {
-  type    = number
-  default = 4
-}
-
 # ─── CloudFront ───────────────────────────────────────────────────────────
 variable "cloudfront_price_class" {
   description = "CloudFront price class"
   type        = string
   default     = "PriceClass_100"
-}
-
-# ─── Application ──────────────────────────────────────────────────────────
-variable "docker_image_tag" {
-  description = "Docker image tag to deploy"
-  type        = string
-  default     = "latest"
 }
 
 variable "alert_email" {
